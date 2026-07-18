@@ -5,28 +5,43 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'assessment',
-      component: () => import('../views/AssessmentView.vue')
+      name: 'Assessment',
+      component: () => import('../views/AssessmentView.vue'),
+      meta: {
+        icon: ''
+      }
     },
     {
       path: '/results',
-      name: 'results',
-      component: () => import('../views/ResultsView.vue')
+      name: 'Results',
+      component: () => import('../views/ResultsView.vue'),
+      meta: {
+        icon: ''
+      }
     },
     {
       path: '/rubrics',
-      name: 'rubrics',
-      component: () => import('../views/RubricsView.vue')
+      name: 'Rubrics',
+      component: () => import('../views/RubricsView.vue'),
+      meta: {
+        icon: ''
+      }
     },
     {
       path: '/teams',
-      name: 'teams',
-      component: () => import('../views/TeamsView.vue')
+      name: 'Teams',
+      component: () => import('../views/TeamsView.vue'),
+      meta: {
+        icon: ''
+      }
     },
     {
       path: '/users',
-      name: 'users',
-      component: () => import('../views/UsersView.vue')
+      name: 'Users',
+      component: () => import('../views/UsersView.vue'),
+      meta: {
+        icon: ''
+      }
     },
   ],
 })
