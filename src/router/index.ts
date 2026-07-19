@@ -1,3 +1,4 @@
+import { PhClipboardText, PhExam, PhTable, PhUserList, PhUsersThree } from '@phosphor-icons/vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -8,7 +9,7 @@ const router = createRouter({
       name: 'Assessment',
       component: () => import('../views/AssessmentView.vue'),
       meta: {
-        icon: ''
+        icon: PhClipboardText
       }
     },
     {
@@ -16,7 +17,7 @@ const router = createRouter({
       name: 'Results',
       component: () => import('../views/ResultsView.vue'),
       meta: {
-        icon: ''
+        icon: PhExam
       }
     },
     {
@@ -24,7 +25,7 @@ const router = createRouter({
       name: 'Rubrics',
       component: () => import('../views/RubricsView.vue'),
       meta: {
-        icon: ''
+        icon: PhTable
       }
     },
     {
@@ -32,7 +33,7 @@ const router = createRouter({
       name: 'Teams',
       component: () => import('../views/TeamsView.vue'),
       meta: {
-        icon: ''
+        icon: PhUsersThree
       }
     },
     {
@@ -40,7 +41,7 @@ const router = createRouter({
       name: 'Users',
       component: () => import('../views/UsersView.vue'),
       meta: {
-        icon: ''
+        icon: PhUserList
       }
     },
   ],
