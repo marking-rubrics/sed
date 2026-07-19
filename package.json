@@ -11,11 +11,13 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@firebase/firestore": "^4.16.0",
     "@phosphor-icons/vue": "^2.2.1",
     "@tailwindcss/vite": "^4.3.3",
     "@vueuse/core": "^14.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "firebase": "^12.16.0",
     "pinia": "^3.0.4",
     "reka-ui": "^2.10.1",
     "shadcn-vue": "^2.8.0",
