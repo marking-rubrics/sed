@@ -6,6 +6,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'
 import type { User } from '@/types'
+import TagsInputWithListbox from './TagsInputWithListbox.vue'
 
 const props = defineProps<{
   user: User
@@ -37,6 +38,7 @@ const deleteUser = () => { editing.value = false }
           :readonly="!editing"
           class="togglable-input"
         />
+        <TagsInputWithListbox v-model="user.rubricIds"/>
       </Field>
       <Field>
         <FieldLabel>Teams</FieldLabel>
