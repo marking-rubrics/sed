@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { TableCell, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+
 import { PhPen, PhCheck, PhX, PhTrash } from '@phosphor-icons/vue'
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -10,9 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // import TagsInputWithListbox from './TagsInputWithListbox.vue'
 
 const props = defineProps<{
-  user: User,
-  rubricList: string[],
-  teamList: string[],
+  user: User
 }>()
 const role = ref(props.user.role)
 const rubricIds = ref(props.user.rubricIds ?? [])
@@ -31,7 +32,18 @@ const deleteUser = () => { editing.value = false }
 </script>
 
 <template>
-<Card>
+<TableRow>
+  <TableCell>{{ user.uid }}</TableCell>
+  <TableCell>{{ user.displayName }}</TableCell>
+  <TableCell>{{ user.role }}</TableCell>
+  <TableCell class="flex flex-row flex-wrap gap-1">
+    <Badge v-for="rubricId in rubricIds" :key="rubricId">{{ rubricId }}</Badge>
+  </TableCell>
+  <TableCell>
+    <Badge v-for="teamId in teamIds" :key="teamId">{{ teamId }}</Badge>
+  </TableCell>
+</TableRow>
+<!-- <Card>
   <CardHeader>
     <CardTitle>{{ user.uid }}</CardTitle>
     <CardDescription>{{ user.displayName }}</CardDescription>
@@ -81,7 +93,7 @@ const deleteUser = () => { editing.value = false }
       </template>
     </div>
   </CardFooter>
-</Card>
+</Card> -->
 </template>
 
 <style scoped>

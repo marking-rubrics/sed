@@ -9,9 +9,8 @@ import { TagsInput, TagsInputInput, TagsInputItem, TagsInputItemDelete, TagsInpu
 const props = defineProps<{
   options: { value: string; label: string }[]
 }>()
-
+const selected = defineModel<string[]>()
 const searchTerm = ref('')
-const selected = ref(['Nuxt', 'Remix'])
 const open = ref(false)
 
 const { contains } = useFilter({ sensitivity: 'base' })
@@ -22,11 +21,7 @@ const filteredOptions = computed(() =>
     : props.options.filter(option => contains(option.label, searchTerm.value)),
 )
 
-watch(searchTerm, (f) => {
-  if (f) {
-    open.value = true
-  }
-})
+watch(searchTerm, (f) => { if (f) { open.value = true } })
 </script>
 
 <template>
@@ -36,22 +31,26 @@ watch(searchTerm, (f) => {
       highlight-on-hover
       multiple
     >
-      <PopoverAnchor class="inline-flex w-[300px]">
-        <TagsInput v-slot="{ modelValue: tags }" v-model="selected" class="w-full">
-          <TagsInputItem v-for="item in tags" :key="item.toString()" :value="item.toString()">
-            <TagsInputItemText />
-            <TagsInputItemDelete />
-          </TagsInputItem>
+      <PopoverAnchor class="inline-flex w-full">
+        <TagsInput v-slot="{ modelValue: tags }" v-model="selected" class="w-full flex flex-col">
+          <div class="inline-flex gap-1 w-full">
+            <TagsInputItem v-for="item in tags" :key="item.toString()" :value="item.toString()">
+              <TagsInputItemText />
+              <TagsInputItemDelete />
+            </TagsInputItem>
+          </div>
 
-          <ListboxFilter v-model="searchTerm" as-child>
-            <TagsInputInput placeholder="Options..." @keydown.enter.prevent @keydown.down="open = true" />
-          </ListboxFilter>
+          <div class="inline-flex gap-1 w-full">
+            <ListboxFilter v-model="searchTerm" as-child>
+              <TagsInputInput placeholder="Options..." @keydown.enter.prevent @keydown.down="open = true" />
+            </ListboxFilter>
 
-          <PopoverTrigger as-child>
-            <Button size="icon-sm" variant="ghost" class="order-last self-start ml-auto">
-              <PhCaretDown class="size-3.5" />
-            </Button>
-          </PopoverTrigger>
+            <PopoverTrigger as-child>
+              <Button size="icon-sm" variant="ghost" class="order-last self-start ml-auto">
+                <PhCaretDown class="size-3.5" />
+              </Button>
+            </PopoverTrigger>
+          </div>
         </TagsInput>
       </PopoverAnchor>
 
