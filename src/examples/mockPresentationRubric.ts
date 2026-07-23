@@ -8,6 +8,7 @@ export const mockPresentationRubric: Rubric = {
     { range: "3-4", descriptor: "Competent" },
     { range: "1-2", descriptor: "Unsatisfactory" }
   ],
+  maxScore: 5,
   components: [
     {
       id: "comp-delivery",

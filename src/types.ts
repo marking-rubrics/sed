@@ -55,6 +55,7 @@ export interface Rubric {
   title: string;
   levels: RubricLevel[]; // Global levels for this rubric (e.g., A, B, C or 1, 2, 3)
   components: RubricComponent[];
+  maxScore: number;
 }
 
 export interface RubricLevel {

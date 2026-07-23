@@ -9,6 +9,7 @@ export const mockEngineeringRubric: Rubric = {
     { range: "40-59", descriptor: "Developing" },
     { range: "0-39", descriptor: "Novice" }
   ],
+  maxScore: 100,
   components: [
     {
       id: "comp-tech-impl",

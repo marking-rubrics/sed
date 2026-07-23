@@ -14,19 +14,19 @@ defineProps<{
   <TableHeader>
     <TableRow>
       <TableHead class="w-auto whitespace-nowrap px-4">Criteria</TableHead>
-      <TableHead class="w-auto whitespace-nowrap px-4">Weightage</TableHead>
+      <TableHead class="w-auto whitespace-nowrap px-4 text-center">Weightage</TableHead>
       <TableHead v-for="level in rubric.levels" :key="level.descriptor"
-        class=""
+        class="text-center"
       >
         {{ level.descriptor }}<br/>{{ level.range }}
       </TableHead>
-      <TableHead>Score</TableHead>
-      <TableHead>Feedback</TableHead>
+      <TableHead class="w-auto whitespace-nowrap text-center">Score</TableHead>
+      <TableHead class="w-auto whitespace-nowrap text-center">Feedback</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
     <template v-for="component in rubric.components" :key="component.id">
-      <RubricComponentDesktop :component="component" />
+      <RubricComponentDesktop :component="component" :maxScore="rubric.maxScore" />
     </template>
   </TableBody>
 </Table>
