@@ -2,20 +2,25 @@
 import { PhPlus } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { mockPresentationRubric } from '@/examples/mockPresentationRubric'
 import { mockEngineeringRubric } from '@/examples/mockEngineeringRubric'
+import type { Rubric } from '@/types'
+import RubricDesktop from '@/components/RubricDesktop.vue'
 
 const teams = ref([
   { name: 'Team 1' },
   { name: 'Team 2' },
   { name: 'Team 3' },
 ])
-const rubrics = ref([
+const rubrics = ref<Rubric[]>([
   mockPresentationRubric,
   mockEngineeringRubric,
 ])
+
+const selectedRubric = ref<string | undefined>(undefined)
+const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id === selectedRubric.value))
 </script>
 
 <template>
@@ -29,29 +34,19 @@ const rubrics = ref([
         <SelectItem v-for="team in teams" :value="team.name">{{ team.name }}</SelectItem>
       </SelectContent>
     </Select>
-    <Select>
+    <Select v-model="selectedRubric">
       <SelectTrigger class="w-full max-w-2xs">
         <SelectValue placeholder="Select a rubric" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="rubric in rubrics" :value="rubric.name">{{ rubric.name }}</SelectItem>
+        <SelectItem v-for="rubric in rubrics" :value="rubric.id">{{ rubric.title }}</SelectItem>
       </SelectContent>
     </Select>
   </div>
 
   <div class="flex flex-row items-start h-full w-full">
     <div class="flex-1 overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-auto whitespace-nowrap px-4">Team</TableHead>
-            <TableHead class="w-full">Members</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-
-        </TableBody>
-      </Table>
+      <RubricDesktop :rubric="selectedRubricData" />
     </div>
   </div>
 </div>
