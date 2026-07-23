@@ -72,7 +72,7 @@ export interface RubricComponent {
   id: string;
   name: string;
   weightage?: number;
-  commentable: boolean;
+  commentable?: boolean;
   subcomponents?: RubricComponent[];                // Recursive structure
   levelDescriptions?: ComponentLevelDescription[];  // Linked to global RubricLevel
 }
