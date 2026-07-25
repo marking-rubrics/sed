@@ -21,13 +21,15 @@ const rubrics = ref<Rubric[]>([
 
 const selectedRubric = ref<string | undefined>(undefined)
 const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id === selectedRubric.value))
+const selectedTeam = ref<string | undefined>(undefined)
+const selectedTeamData = computed(() => teams.value.find((t: any) => t.name === selectedTeam.value))
 </script>
 
 <template>
 <div class="flex flex-col gap-2 mt-2">
   <div class="flex flex-row flex-wrap items-center gap-2">
-    <Select>
-      <SelectTrigger class="w-full max-w-2xs">
+    <Select v-model="selectedTeam">
+      <SelectTrigger class="w-full max-w-2xs" :class="selectedTeam ? 'bg-teal-100' : 'bg-red-100'">
         <SelectValue placeholder="Select a team" />
       </SelectTrigger>
       <SelectContent>
@@ -35,7 +37,7 @@ const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id
       </SelectContent>
     </Select>
     <Select v-model="selectedRubric">
-      <SelectTrigger class="w-full max-w-2xs">
+      <SelectTrigger class="w-full max-w-2xs" :class="selectedRubric ? 'bg-teal-100' : 'bg-red-100'">
         <SelectValue placeholder="Select a rubric" />
       </SelectTrigger>
       <SelectContent>
