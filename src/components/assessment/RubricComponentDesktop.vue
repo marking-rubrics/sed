@@ -2,7 +2,7 @@
 import type { RubricComponent } from '@/types'
 import { TableRow, TableCell } from '@/components/ui/table';
 import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput } from '@/components/ui/number-field';
-import { Textarea } from './ui/textarea';
+import { Textarea } from '@/components/ui/textarea';
 
 defineProps<{
   component: RubricComponent

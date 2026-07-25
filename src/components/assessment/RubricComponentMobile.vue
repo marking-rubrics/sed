@@ -1,16 +1,6 @@
 <script setup lang="ts">
 import type { RubricComponent, RubricLevel } from '@/types'
-import { TableRow, TableCell } from '@/components/ui/table';
-import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput } from '@/components/ui/number-field';
-import { Textarea } from './ui/textarea';
-import { Separator } from './ui/separator';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Field, FieldLabel } from './ui/field';
-import { PhEye } from '@phosphor-icons/vue';
 import RubricComponentCard from './RubricComponentCard.vue';
-
 
 defineProps<{
   levels: RubricLevel[]

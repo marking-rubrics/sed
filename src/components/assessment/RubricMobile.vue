@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Rubric, AssessedRubric } from "@/types"
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import RubricComponentMobile from "./RubricComponentMobile.vue"
 
 defineProps<{

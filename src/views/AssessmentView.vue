@@ -7,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { mockPresentationRubric } from '@/examples/mockPresentationRubric'
 import { mockEngineeringRubric } from '@/examples/mockEngineeringRubric'
 import type { Rubric, AssessedRubric } from '@/types'
-import RubricDesktop from '@/components/RubricDesktop.vue'
-import RubricMobile from '@/components/RubricMobile.vue'
+import { RubricDesktop, RubricMobile } from '@/components/assessment'
 
 const teams = ref([
   { name: 'Team 1' },

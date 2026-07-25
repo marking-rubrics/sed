@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Field, FieldLabel } from './ui/field';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { PhEye, PhEyeClosed } from '@phosphor-icons/vue';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput } from './ui/number-field';
-import { Textarea } from './ui/textarea';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput } from '@/components/ui/number-field';
+import { Textarea } from '@/components/ui/textarea';
 import type { RubricComponent, RubricLevel } from '@/types';
 import { ref } from 'vue';
 

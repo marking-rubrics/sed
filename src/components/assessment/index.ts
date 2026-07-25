@@ -1,0 +1,5 @@
+export { default as RubricMobile } from './RubricMobile.vue'
+export { default as RubricComponentMobile } from './RubricComponentMobile.vue'
+export { default as RubricComponentCard } from './RubricComponentCard.vue'
+export { default as RubricDesktop } from './RubricDesktop.vue'
+export { default as RubricComponentDesktop } from './RubricComponentDesktop.vue'
