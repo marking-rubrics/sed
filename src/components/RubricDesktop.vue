@@ -10,13 +10,13 @@ defineProps<{
 </script>
 
 <template>
-<Table v-if="rubric" class="w-full table-fixed">
+<Table v-if="rubric" class="w-full">
   <TableHeader>
     <TableRow>
-      <TableHead class="w-auto whitespace-nowrap px-4">Criteria</TableHead>
+      <TableHead class="px-4">Criteria</TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Weightage</TableHead>
       <TableHead v-for="level in rubric.levels" :key="level.descriptor"
-        class="text-center"
+        class="text-center px-4"
       >
         {{ level.descriptor }}<br/>{{ level.range }}
       </TableHead>

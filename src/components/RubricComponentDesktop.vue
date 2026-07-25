@@ -19,7 +19,7 @@ defineProps<{
 </template>
 <template v-else>
   <TableRow>
-    <TableCell class="w-auto whitespace-nowrap px-4">{{ component.name }}</TableCell>
+    <TableCell class="whitespace-normal wrap-break-words px-4">{{ component.name }}</TableCell>
     <TableCell class="w-auto whitespace-nowrap px-4 text-center">{{ component.weightage }}</TableCell>
     <TableCell class="whitespace-normal wrap-break-words px-4" v-for="ld in component.levelDescriptions">{{ ld.description }}</TableCell>
     <TableCell class="w-auto whitespace-nowrap px-4 text-center">
@@ -28,13 +28,13 @@ defineProps<{
       }">
         <NumberFieldContent>
           <NumberFieldDecrement />
-          <NumberFieldInput />
+          <NumberFieldInput class="w-30" />
           <NumberFieldIncrement />
         </NumberFieldContent>
       </NumberField>
     </TableCell>
-    <TableCell class="w-auto whitespace-nowrap px-4 text-center">
-      <Textarea />
+    <TableCell class="w-auto px-4 text-center">
+      <Textarea class="w-[250px] h-[100px]" />
     </TableCell>
   </TableRow>
 </template>
