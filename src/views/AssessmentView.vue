@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { PhPlus } from '@phosphor-icons/vue'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ref, computed } from 'vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { mockPresentationRubric } from '@/examples/mockPresentationRubric'
