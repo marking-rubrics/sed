@@ -6,8 +6,9 @@ import { ref, computed } from 'vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { mockPresentationRubric } from '@/examples/mockPresentationRubric'
 import { mockEngineeringRubric } from '@/examples/mockEngineeringRubric'
-import type { Rubric } from '@/types'
+import type { Rubric, AssessedRubric } from '@/types'
 import RubricDesktop from '@/components/RubricDesktop.vue'
+import RubricMobile from '@/components/RubricMobile.vue'
 
 const teams = ref([
   { name: 'Team 1' },
@@ -23,6 +24,8 @@ const selectedRubric = ref<string | undefined>(undefined)
 const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id === selectedRubric.value))
 const selectedTeam = ref<string | undefined>(undefined)
 const selectedTeamData = computed(() => teams.value.find((t: any) => t.name === selectedTeam.value))
+
+const assessedRubric = ref<AssessedRubric | undefined>(undefined)
 </script>
 
 <template>
@@ -47,8 +50,11 @@ const selectedTeamData = computed(() => teams.value.find((t: any) => t.name === 
   </div>
 
   <div class="flex flex-row items-start h-full w-full">
-    <div class="flex-1 overflow-x-auto">
-      <RubricDesktop :rubric="selectedRubricData" />
+    <div class="flex-1 overflow-x-auto hidden md:block">
+      <RubricDesktop :rubric="selectedRubricData" :assessedRubric="assessedRubric" />
+    </div>
+    <div class="flex-1 overflow-x-auto block md:hidden">
+      <RubricMobile :rubric="selectedRubricData" :assessedRubric="assessedRubric" />
     </div>
   </div>
 </div>
