@@ -32,7 +32,7 @@ const assessedRubric = ref<AssessedRubric | undefined>(undefined)
 <div class="flex flex-col gap-2 mt-2">
   <div class="flex flex-row flex-wrap items-center gap-2">
     <Select v-model="selectedTeam">
-      <SelectTrigger class="w-full max-w-2xs" :class="selectedTeam ? 'bg-teal-100' : 'bg-red-100'">
+      <SelectTrigger class="w-full sm:w-2xs" :class="selectedTeam ? 'bg-teal-100' : 'bg-red-100'">
         <SelectValue placeholder="Select a team" />
       </SelectTrigger>
       <SelectContent>
@@ -40,7 +40,7 @@ const assessedRubric = ref<AssessedRubric | undefined>(undefined)
       </SelectContent>
     </Select>
     <Select v-model="selectedRubric">
-      <SelectTrigger class="w-full max-w-2xs" :class="selectedRubric ? 'bg-teal-100' : 'bg-red-100'">
+      <SelectTrigger class="w-full sm:w-2xs" :class="selectedRubric ? 'bg-teal-100' : 'bg-red-100'">
         <SelectValue placeholder="Select a rubric" />
       </SelectTrigger>
       <SelectContent>
