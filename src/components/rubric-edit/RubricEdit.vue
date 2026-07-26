@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { Rubric, AssessedRubric } from "@/types"
+import type { Rubric } from "@/types"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import { RubricEditComponent } from "./index"
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { PhColumnsPlusRight, PhColumnsPlusLeft, PhTrash, PhDotsThree } from "@phosphor-icons/vue";
 
 defineProps<{
   rubric: Rubric | undefined
@@ -15,6 +16,8 @@ defineProps<{
 <Table v-if="rubric" class="w-full">
   <TableHeader>
     <TableRow>
+      <TableHead></TableHead>
+      <TableHead></TableHead>
       <TableHead></TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Descriptor</TableHead>
       <TableHead v-for="level in rubric.levels" :key="level.descriptor"
@@ -28,6 +31,8 @@ defineProps<{
     </TableRow>
     <TableRow>
       <TableHead></TableHead>
+      <TableHead></TableHead>
+      <TableHead></TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Range</TableHead>
       <TableHead v-for="level in rubric.levels" :key="level.descriptor"
         class="text-center px-4"
@@ -39,20 +44,22 @@ defineProps<{
       </TableHead>
     </TableRow>
     <TableRow>
+      <TableHead></TableHead>
+      <TableHead></TableHead>
       <TableHead class="px-4">Criteria</TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Weightage</TableHead>
       <TableHead v-for="level in rubric.levels" :key="level.descriptor" class="px-4">
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button variant="secondary" class="w-full text-sm text-center">
-              Menu
+              <PhDotsThree />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuGroup>
-              <DropdownMenuItem>Add Left</DropdownMenuItem>
-              <DropdownMenuItem>Add Right</DropdownMenuItem>
-              <DropdownMenuItem>Delete</DropdownMenuItem>
+              <DropdownMenuItem><PhColumnsPlusLeft /> Add Left</DropdownMenuItem>
+              <DropdownMenuItem><PhColumnsPlusRight /> Add Right</DropdownMenuItem>
+              <DropdownMenuItem><PhTrash /> Delete</DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -60,8 +67,8 @@ defineProps<{
     </TableRow>
   </TableHeader>
   <TableBody>
-    <template v-for="component in rubric.components" :key="component.id">
-      <RubricEditComponent :component="component" :maxScore="rubric.maxScore" />
+    <template v-for="(component, index) in rubric.components" :key="component.id">
+      <RubricEditComponent :component="component" :maxScore="rubric.maxScore" :indexList="[index + 1]" />
     </template>
   </TableBody>
 </Table>
