@@ -8,6 +8,8 @@ import { mockPresentationRubric } from '@/examples/mockPresentationRubric'
 import { mockEngineeringRubric } from '@/examples/mockEngineeringRubric'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { RubricEdit } from '@/components/rubric-edit'
+import { Input } from '@/components/ui/input'
+import { Field, FieldLabel } from '@/components/ui/field'
 
 const rubrics = ref<Rubric[]>([
   mockPresentationRubric,
@@ -31,7 +33,13 @@ const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id
     </Select>
   </div>
 
-  <div class="flex flex-row items-start h-full w-full">
+  <div class="flex flex-col items-start h-full w-full gap-2 mt-2" v-if="selectedRubricData && selectedRubricData.id">
+    <Field>
+      <FieldLabel>Rubric Name</FieldLabel>
+      <Input :value="selectedRubricData?.title" class="w-full"/>
+    </Field>
+    <div class="flex flex-row items-start">
+    </div>
     <div class="flex-1 overflow-x-auto">
       <RubricEdit :rubric="selectedRubricData" />
     </div>

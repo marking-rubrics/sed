@@ -16,7 +16,7 @@ defineProps<{
 </script>
 
 <template>
-<template v-if="component.subcomponents">
+<template v-if="component.subcomponents && component.subcomponents.length > 0">
   <TableRow>
     <TableCell>
       <DropdownMenu>
@@ -53,6 +53,7 @@ defineProps<{
           <DropdownMenuGroup>
             <DropdownMenuItem><PhRowsPlusTop /> Add Above</DropdownMenuItem>
             <DropdownMenuItem><PhRowsPlusBottom /> Add Below</DropdownMenuItem>
+            <DropdownMenuItem><PhListPlus /> Add Sub</DropdownMenuItem>
             <DropdownMenuItem><PhTrash /> Delete</DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
