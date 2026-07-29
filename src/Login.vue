@@ -15,7 +15,93 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { computed, ref, onMounted } from "vue"
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import type { User } from '@/stores/users'
+import { onAuthStateChanged } from 'firebase/auth'
 
+const username = ref<string>('')
+const email = computed<string>(() => username.value + "@sed-marking.com")
+const password = ref<string>('')
+const isSubmitting = ref<boolean>(false)
+const errorMessage = ref<string>('')
+
+/**
+ * Handles post-authentication storage and redirection.
+ * @param authResult The strictly typed user profile returned from the API
+ */
+function onLoginSuccess(authResult: User): void {
+  // Save the session data matching the layout your SPA store expects
+  localStorage.setItem('auth_user', JSON.stringify(authResult))
+
+  // Extract the target redirection query track safely
+  const urlParams = new URLSearchParams(window.location.search)
+  const redirectTo = urlParams.get('redirect')
+
+  if (redirectTo) {
+    window.location.replace(decodeURIComponent(redirectTo))
+  } else {
+    window.location.replace('/')
+  }
+}
+
+async function handleLogin(): Promise<void> {
+  isSubmitting.value = true
+  errorMessage.value = ''
+
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
+    const firebaseUser = userCredential.user
+
+    // 2. Format the user object to match the Pinia User interface shape
+    // (You can assign roles based on custom claims or fallback to custom logic)
+    const authResult: User = {
+      id: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      displayName: firebaseUser.displayName || 'User',
+      role: 'Admin', // Or parse from custom claims: (await firebaseUser.getIdTokenResult()).claims.role
+      rubricIds: [],
+      teamIds: []
+    }
+
+    onLoginSuccess(authResult)
+
+  } catch (error) {
+    if (error instanceof Error) {
+      errorMessage.value = error.message
+    } else {
+      errorMessage.value = 'An unexpected authentication error occurred.'
+    }
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const isCheckingSession = ref<boolean>(true)
+
+onMounted(() => {
+  // onAuthStateChanged returns an unsubscribe function we can call later
+  const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      // User is already logged in! Map their data structure
+      const authResult: User = {
+        id: firebaseUser.uid,
+        displayName: firebaseUser.displayName || 'Faculty Member',
+        role: 'Admin', // Match your database metadata strategy here
+        rubricIds: [],
+        teamIds: []
+      }
+
+      // Stop listening and auto-redirect them straight into the SPA track
+      unsubscribe()
+      onLoginSuccess(authResult)
+    } else {
+      // No active session found, turn off loading state to show the login form safely
+      isCheckingSession.value = false
+    }
+  })
+})
 </script>
 
 <template>
@@ -36,13 +122,14 @@ import { Input } from "@/components/ui/input"
             </CardTitle>
           </CardHeader> -->
           <CardContent>
-            <form>
+            <form @submit.prevent="handleLogin">
               <FieldGroup>
                 <Field>
                   <FieldLabel for="user">
                     User
                   </FieldLabel>
                   <Input
+                    v-model="username"
                     id="user"
                     type="text"
                     placeholder="user"
@@ -61,7 +148,12 @@ import { Input } from "@/components/ui/input"
                       Forgot your password?
                     </a> -->
                   </div>
-                  <Input id="password" type="password" required />
+                  <Input
+                    v-model="password"
+                    id="password"
+                    type="password"
+                    required
+                  />
                 </Field>
                 <Field>
                   <Button type="submit">
@@ -74,6 +166,11 @@ import { Input } from "@/components/ui/input"
                     </a>
                   </FieldDescription> -->
                 </Field>
+                <!-- <Field>
+                  <FieldDescription class="text-center text-destructive" v-if="errorMessage">
+                    {{ errorMessage }}
+                  </FieldDescription>
+                </Field> -->
               </FieldGroup>
             </form>
           </CardContent>

@@ -7,7 +7,13 @@ const currentRoute = useRoute()
 const router = useRouter();
 const routerList = router.getRoutes();
 
-const user = "user";
+import { useUserStore } from '@/stores/users'
+const userStore = useUserStore()
+
+async function handleLogout() {
+  // Simply invoke the store method—it will handle the cleanup and redirect
+  await userStore.clearUserSession()
+}
 </script>
 
 <template>
@@ -18,8 +24,8 @@ const user = "user";
       :title="route.name"
     ><RouterLink :to="route.path"><component :is="route.meta.icon"></component><span class="hidden md:flex">{{ route.name }}</span></RouterLink></Button>
     <div class="flex flex-row gap-1 items-center ms-auto select-none">
-      <div class="text-xs flex flex-row items-center"><span class="hidden md:flex">Logged in as &nbsp;</span><span class="font-bold">{{ user }}</span></div>
-      <Button variant="destructive" title="Log out"><PhSignOut/></Button>
+      <div class="text-xs flex flex-row items-center"><span class="hidden md:flex">Logged in as &nbsp;</span><span class="font-bold">{{ userStore.currentUser?.email }}</span></div>
+      <Button variant="destructive" title="Log out" @click="handleLogout"><PhSignOut/></Button>
     </div>
   </div>
   <div class="flex flex-col px-5 pt-3 pb-10">
