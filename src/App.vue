@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PhSignOut } from '@phosphor-icons/vue';
 import { Button } from './components/ui/button';
+import { getUsername } from './utils/users';
 
 import { useRouter, useRoute } from 'vue-router';
 const currentRoute = useRoute()
@@ -14,6 +15,12 @@ async function handleLogout() {
   // Simply invoke the store method—it will handle the cleanup and redirect
   await userStore.clearUserSession()
 }
+
+const isRoutePermitted = (allowedRoles: string[]): boolean => {
+  return allowedRoles.length > 0 ?
+    userStore.currentUser?.roles.some(role => allowedRoles.includes(role)) || false
+    : false
+}
 </script>
 
 <template>
@@ -22,9 +29,14 @@ async function handleLogout() {
     <Button as-child variant="ghost" v-for="route in routerList" :key="route.name"
       :class="currentRoute.name == route.name ? 'bg-teal-600 hover:bg-teal-100 text-white hover:text-primary' : ''"
       :title="route.name"
-    ><RouterLink :to="route.path"><component :is="route.meta.icon"></component><span class="hidden md:flex">{{ route.name }}</span></RouterLink></Button>
+    >
+      <RouterLink :to="route.path" v-if="isRoutePermitted(route.meta.allowedRoles as string[])">
+        <component :is="route.meta.icon"/>
+        <span class="hidden md:flex">{{ route.name }}</span>
+      </RouterLink>
+    </Button>
     <div class="flex flex-row gap-1 items-center ms-auto select-none">
-      <div class="text-xs flex flex-row items-center"><span class="hidden md:flex">Logged in as &nbsp;</span><span class="font-bold">{{ userStore.currentUser?.email }}</span></div>
+      <div class="text-xs flex flex-row items-center"><span class="hidden md:flex">Logged in as &nbsp;</span><span class="font-bold">{{ getUsername(userStore.currentUser?.email) }}</span></div>
       <Button variant="destructive" title="Log out" @click="handleLogout"><PhSignOut/></Button>
     </div>
   </div>

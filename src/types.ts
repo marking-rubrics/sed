@@ -1,26 +1,27 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type UserRole = 'Admin' | 'Lecturer' | 'Assessor';
+export type UserRole = 'admin' | 'lecturer' | 'assessor' | string;
 
-/**
- * User Profile Metadata
- * Firestore Location: /users/{uid}
- */
-export interface UserProfile {
-  uid: string;
-  displayName: string;
-  role: UserRole;
-}
+// /**
+//  * User Profile Metadata
+//  * Firestore Location: /users/{uid}
+//  */
+// export interface UserProfile {
+//   id: string;
+//   displayName: string;
+//   role: UserRole;
+// }
 
 /**
  * User data
  */
 export interface User {
-  uid: string;
-  displayName: string;
-  role: UserRole;
-  rubricIds?: string[];
-  teamIds?: string[];
+  id: string
+  displayName: string
+  email: string
+  roles: UserRole[]
+  rubricIds?: string[]
+  teamIds?: string[]
 }
 
 /**

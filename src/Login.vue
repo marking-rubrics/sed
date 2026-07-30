@@ -17,15 +17,35 @@ import {
 import { Input } from "@/components/ui/input"
 import { computed, ref, onMounted } from "vue"
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
-import type { User } from '@/stores/users'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase'
+import type { User } from '@/types'
 import { onAuthStateChanged } from 'firebase/auth'
+import { formatUserFromServer } from "@/utils/users"
 
 const username = ref<string>('')
 const email = computed<string>(() => username.value + "@sed-marking.com")
 const password = ref<string>('')
 const isSubmitting = ref<boolean>(false)
 const errorMessage = ref<string>('')
+
+async function fetchUserWithRoles(firebaseUser: any): Promise<User> {
+  const userDocRef = doc(db, 'users', firebaseUser.uid)
+  const userDocSnap = await getDoc(userDocRef)
+
+  let assignedRoles: string[] = ['']
+  if (userDocSnap.exists()) {
+    const data = userDocSnap.data()
+    if (Array.isArray(data.roles)) {
+      assignedRoles = data.roles
+    }
+  }
+
+  const result: User = formatUserFromServer(firebaseUser)
+  result.roles = assignedRoles
+
+  return result
+}
 
 /**
  * Handles post-authentication storage and redirection.
@@ -53,17 +73,7 @@ async function handleLogin(): Promise<void> {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
     const firebaseUser = userCredential.user
-
-    // 2. Format the user object to match the Pinia User interface shape
-    // (You can assign roles based on custom claims or fallback to custom logic)
-    const authResult: User = {
-      id: firebaseUser.uid,
-      email: firebaseUser.email || '',
-      displayName: firebaseUser.displayName || 'User',
-      role: 'Admin', // Or parse from custom claims: (await firebaseUser.getIdTokenResult()).claims.role
-      rubricIds: [],
-      teamIds: []
-    }
+    const authResult = await fetchUserWithRoles(firebaseUser)
 
     onLoginSuccess(authResult)
 
@@ -84,17 +94,9 @@ onMounted(() => {
   // onAuthStateChanged returns an unsubscribe function we can call later
   const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
-      // User is already logged in! Map their data structure
-      const authResult: User = {
-        id: firebaseUser.uid,
-        displayName: firebaseUser.displayName || 'Faculty Member',
-        role: 'Admin', // Match your database metadata strategy here
-        rubricIds: [],
-        teamIds: []
-      }
+      const authResult = await fetchUserWithRoles(firebaseUser)
 
-      // Stop listening and auto-redirect them straight into the SPA track
-      unsubscribe()
+      unsubscribe() // Stop listening and auto-redirect them straight into the SPA track
       onLoginSuccess(authResult)
     } else {
       // No active session found, turn off loading state to show the login form safely

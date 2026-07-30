@@ -11,7 +11,8 @@ const router = createRouter({
       component: () => import('../views/AssessmentView.vue'),
       meta: {
         icon: PhClipboardText,
-        requiresAuth: true
+        requiresAuth: true,
+        allowedRoles: ['assessor', 'lecturer', 'admin']
       }
     },
     {
@@ -20,7 +21,8 @@ const router = createRouter({
       component: () => import('../views/ResultsView.vue'),
       meta: {
         icon: PhExam,
-        requiresAuth: true
+        requiresAuth: true,
+        allowedRoles: ['lecturer', 'admin']
       }
     },
     {
@@ -29,7 +31,8 @@ const router = createRouter({
       component: () => import('../views/RubricsView.vue'),
       meta: {
         icon: PhTable,
-        requiresAuth: true
+        requiresAuth: true,
+        allowedRoles: ['lecturer', 'admin']
       }
     },
     {
@@ -38,7 +41,8 @@ const router = createRouter({
       component: () => import('../views/TeamsView.vue'),
       meta: {
         icon: PhUsersThree,
-        requiresAuth: true
+        requiresAuth: true,
+        allowedRoles: ['lecturer', 'admin']
       }
     },
     {
@@ -47,7 +51,8 @@ const router = createRouter({
       component: () => import('../views/UsersView.vue'),
       meta: {
         icon: PhUserList,
-        requiresAuth: true
+        requiresAuth: true,
+        allowedRoles: ['admin']
       }
     },
   ],
@@ -60,22 +65,25 @@ router.beforeEach(async (to, from) => {
   await userStore.waitForAuthInit()
 
   const isAuthenticated = !!userStore.currentUser
-  const userRole = userStore.currentUser?.role
+  const userRoles = userStore.currentUser?.roles || []
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
   // 1. Not signed in? Handle external redirect using window location
   if (requiresAuth && !isAuthenticated) {
     const targetPath = encodeURIComponent(to.fullPath)
     window.location.assign(`/login.html?redirect=${targetPath}`)
-    return false // 👈 Replaces next(false) - explicitly cancels the internal Vue route transition
+    return false
   }
 
   // 2. Role validation for signed-in users
   if (requiresAuth && isAuthenticated) {
     const allowedRoles = to.matched.flatMap(record => record.meta.allowedRoles || []) as string[]
 
-    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole!)) {
-      return { name: 'Unauthorized' } // 👈 Replaces next({ name: 'Unauthorized' }) - returns the RouteLocation raw object
+    if (allowedRoles.length > 0) {
+      const hasPermission = userRoles.some(role => allowedRoles.includes(role))
+      if (!hasPermission) {
+        return { name: 'Unauthorized' }
+      }
     }
   }
 })

@@ -2,15 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-
-export interface User {
-  id: string
-  displayName: string
-  email: string
-  role: string
-  rubricIds: string[]
-  teamIds: string[]
-}
+import type { User } from '@/types'
 
 export const useUserStore = defineStore('users', () => {
   // 1. Core State
