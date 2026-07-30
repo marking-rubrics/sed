@@ -6,7 +6,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components
 import { Separator } from '@/components/ui/separator';
 import UserEditor from '@/components/UserEditor.vue';
 import { ref } from 'vue'
-import { createEmptyUser } from '@/utils/factory'
+import { createEmptyUser } from '@/utils/users
 import { Button } from '@/components/ui/button'
 import { PhPlus } from '@phosphor-icons/vue'
 
