@@ -51,6 +51,11 @@ export interface Team {
  * Firestore Location: /rubrics/{rubricId}
  * OPTIMIZATION 1: Highly scalable. Heavy criteria lists are offloaded to a sub-collection.
  */
+ export interface RubricLookup {
+   id: string;
+   title: string;
+ }
+
 export interface Rubric {
   id: string;
   title: string;
