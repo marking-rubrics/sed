@@ -10,8 +10,8 @@ import {
   Timestamp 
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { AssessedRubric, AssessedComponent } from '@/types/assessment'
-import type { RubricComponent } from '@/types/rubric'
+import type { AssessedRubric, AssessedComponent } from '@/types'
+import type { RubricComponent } from '@/types'
 
 /**
  * 🔍 FETCH EXISTING: Checks if this assessor has an evaluation history for this team/rubric pair.
