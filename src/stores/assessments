@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { AssessedRubric, AssessedComponent } from '@/types/assessment'
-import type { Rubric } from '@/types/rubric'
+import type { AssessedRubric, AssessedComponent } from '@/types'
+import type { Rubric } from '@/types'
 import { getExistingAssessment, saveAssessment } from '@/services/assessmentService'
 import { syncAssessmentWithRubric } from '@/utils/assessmentHelpers'
 
