@@ -1,36 +1,57 @@
 <script setup lang="ts">
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import UserInfo from '@/components/UserInfo.vue';
-import type { User, UserRole } from '@/types'
+import type { User, Team, RubricLookup } from '@/types'
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import UserEditor from '@/components/UserEditor.vue';
-import { ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { createEmptyUser } from '@/utils/users'
 import { Button } from '@/components/ui/button'
 import { PhPlus } from '@phosphor-icons/vue'
+import { Input } from '@/components/ui/input'
+import { getAllTeams } from '@/services/teamService'
+import { getAllUsersWithProfileAssignments, updateExistingUserAndAssignments, administrativeDeleteUser } from '@/services/userService'
+import { adminRegisterAndProvisionUser } from '@/services/adminService'
+import { getRubricsLookup } from '@/services/rubricService';
+import { getAuth } from 'firebase/auth'
 
+const auth = getAuth()
+const manageableUsers = computed(() => {
+  const currentAdminUid = auth.currentUser?.uid
 
-const currentUser = {
-  id: 'user',
-  role: 'Admin' as UserRole,
-  displayName: 'User Display Name',
-  rubricIds: ['fdssaf', 'fsdafa'],
-  teamIds: ['fdsaf'],
+  return users.value.filter((user) => {
+    // 🚀 CRITICAL CHECK: Filter out any soft-deleted or disabled profile accounts
+    if ((user as any).isDisabled === true) return false
+
+    // Filter out the currently logged-in admin session
+    if (user.id === currentAdminUid) return false
+
+    return true
+  })
+})
+
+const users = ref<User[]>([])
+const teams = ref<Team[]>([])
+const rubrics = ref<RubricLookup[]>([])
+onMounted(async () => {
+  users.value = await getAllUsersWithProfileAssignments()
+  teams.value = await getAllTeams()
+  rubrics.value = await getRubricsLookup()
+})
+
+const newUserName = ref("")
+const newEmail = computed(() => newUserName.value + "@sed-marking.com")
+const createNewUser = async () => {
+  if (newUserName.value === '') return
+  await adminRegisterAndProvisionUser({
+    displayName: newUserName.value,
+    email: newEmail.value,
+    password: 'sunway',
+    roles: ['assessor']
+  })
+  users.value = await getAllUsersWithProfileAssignments()
 }
-
-const otherUsers = [
-  {
-    id: 'asdfljlj',
-    role: 'Admin' as UserRole,
-    displayName: 'idhsuocahsdocois',
-    rubricIds: [''],
-    teamIds: [''],
-  },
-]
-
-const rubricList = [{ value: 'a', label: 'a' }, { value: 'b', label: 'b' }, { value: 'c', label: 'c' }]
-const teamList = [{ value: 'T1-1', label: 'T1-1' }, { value: 'T1-2', label: 'T1-2' }]
 
 const showEditor = ref(false)
 const openEditor = () => { showEditor.value = true }
@@ -44,18 +65,28 @@ const sendToEditor = (user: User) => {
     openEditor()
   }
 }
-const updateUser = (user: User) => {
+const updateUser = async (user: User) => {
   userInEditor.value = user
+  await updateExistingUserAndAssignments({
+    id: user.id,
+    displayName: user.displayName,
+    roles: user.roles,
+    rubricIds: user.rubricIds,
+    teamIds: user.teamIds
+  })
+  users.value = await getAllUsersWithProfileAssignments()
 }
-const deleteUser = (user: User) => {
-
+const deleteUser = async (user: User) => {
+  await administrativeDeleteUser(user.id)
+  users.value = await getAllUsersWithProfileAssignments()
 }
 </script>
 
 <template>
 <div class="flex flex-col gap-2 mt-2">
-  <div class="flex flex-row items-center">
-    <Button variant="secondary"><PhPlus /> New User</Button>
+  <div class="flex flex-row items-center gap-1">
+    <Input placeholder="Username" v-model="newUserName"/>
+    <Button variant="secondary" @click="createNewUser"><PhPlus /> New User</Button>
   </div>
 
   <div class="flex flex-row items-start h-full w-full">
@@ -71,8 +102,8 @@ const deleteUser = (user: User) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <UserInfo :user="currentUser" class="w-full max-w-md" @click="sendToEditor(currentUser)"/>
-          <UserInfo v-for="user in otherUsers" :key="user.uid" :user="user" class="w-full max-w-md" @click="sendToEditor(user)"/>
+          <!-- <UserInfo :user="currentUser" class="w-full max-w-md" @click="sendToEditor(currentUser)"/> -->
+          <UserInfo v-for="user in manageableUsers" :key="user.id" :user="user" class="w-full max-w-md" @click="sendToEditor(user)"/>
         </TableBody>
       </Table>
     </div>
@@ -82,7 +113,7 @@ const deleteUser = (user: User) => {
     >
       <!-- <Separator orientation="vertical" class="mx-5 h-auto self-stretch"/> -->
       <UserEditor class="w-150"
-        :user="userInEditor" :rubricList="rubricList" :teamList="teamList"
+        :user="userInEditor" :rubrics="rubrics" :teams="teams"
         @close="closeEditor" @update="updateUser" @delete="deleteUser"
       />
     </aside>

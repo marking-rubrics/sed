@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { User, UserRole } from "@/types";
+import type { RubricLookup, User } from "@/types";
 import { ref, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import { PhX, PhCheck, PhTrash, PhArrowCounterClockwise } from "@phosphor-icons/vue";
@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
 import TagsInputWithListbox from "./TagsInputWithListbox.vue";
+import type { Rubric, Team } from "@/types";
 
 const props = defineProps<{
   user: User,
-  rubricList: { value: string; label: string }[],
-  teamList: { value: string; label: string }[],
+  rubrics: RubricLookup[],
+  teams: Team[],
 }>()
+const userRoles = ['admin', 'lecturer', 'assessor']
 const displayName = ref('')
-const role = ref('')
+const roles = ref<string[]>([])
 const rubricIds = ref<string[]>([])
 const teamIds = ref<string[]>([])
 
@@ -23,7 +25,7 @@ watch(
   (newUser) => {
     if (!newUser) return
     displayName.value = newUser.displayName
-    role.value = newUser.role
+    roles.value = [...newUser.roles]
     rubricIds.value = [...(newUser.rubricIds ?? [])]
     teamIds.value = [...(newUser.teamIds ?? [])]
   },
@@ -34,25 +36,25 @@ const confirmEdit = () => {
   emits('update', {
     ...props.user,
     displayName: displayName.value,
-    role: role.value as UserRole,
+    roles: [...roles.value],
     rubricIds: [...rubricIds.value],
     teamIds: [...teamIds.value]
   })
 }
 const resetEdit = () => {
   displayName.value = props.user.displayName
-  role.value = props.user.role
-  rubricIds.value = props.user.rubricIds ?? []
-  teamIds.value = props.user.teamIds ?? []
+  roles.value = [...props.user.roles]
+  rubricIds.value = [...(props.user.rubricIds ?? [])]
+  teamIds.value = [...(props.user.teamIds ?? [])]
 }
 const deleteUser = () => {
-  emits('delete')
+  emits('delete', props.user)
 }
 
 const emits = defineEmits<{
   (e: 'close'): void,
   (e: 'update', user: User): void
-  (e: 'delete'): void
+  (e: 'delete', user: User): void
 }>()
 const closeEditor = () => {
   emits('close')
@@ -76,7 +78,7 @@ const closeEditor = () => {
         <FieldGroup>
           <Field>
             <FieldLabel>Username</FieldLabel>
-            <Input disabled :value="props.user.uid"></Input>
+            <Input disabled :value="props.user.email.replace('@sed-marking.com', '')"></Input>
           </Field>
           <Field>
             <FieldLabel>Display Name</FieldLabel>
@@ -84,23 +86,24 @@ const closeEditor = () => {
           </Field>
           <Field>
             <FieldLabel>Role</FieldLabel>
-            <Input v-model="role"></Input>
+            <TagsInputWithListbox
+              v-model="roles" :options="userRoles.map(role => ({ value: role, label: role }))"></TagsInputWithListbox>
           </Field>
           <Field>
             <FieldLabel>Rubrics</FieldLabel>
             <TagsInputWithListbox
-              v-model="rubricIds" :options="props.rubricList"></TagsInputWithListbox>
+              v-model="rubricIds" :options="rubrics.map(r => ({ value: r.id, label: r.title }))"></TagsInputWithListbox>
           </Field>
           <Field>
             <FieldLabel>Teams</FieldLabel>
-            <TagsInputWithListbox v-model="teamIds" :options="props.teamList"></TagsInputWithListbox>
+            <TagsInputWithListbox v-model="teamIds" :options="teams.map(t => ({ value: t.id, label: t.name }))"></TagsInputWithListbox>
           </Field>
         </FieldGroup>
       </FieldSet>
     </div>
   </CardContent>
 
-  <CardFooter class="flex flex-row justify-end">
+  <CardFooter class="flex flex-row gap-1 justify-end">
     <Button variant="secondary" @click="resetEdit"><PhArrowCounterClockwise/>Reset</Button>
     <Button variant="default" @click="confirmEdit"><PhCheck/>Confirm</Button>
     <Button variant="destructive" @click="deleteUser" class="ms-auto"><PhTrash/>Delete</Button>

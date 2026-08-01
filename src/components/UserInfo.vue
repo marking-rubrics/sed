@@ -15,32 +15,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const props = defineProps<{
   user: User
 }>()
-const role = ref(props.user.role)
-const rubricIds = ref(props.user.rubricIds ?? [])
-const teamIds = ref(props.user.teamIds ?? [])
-
-const editing = ref(false)
-const confirmEdit = () => { editing.value = false }
-const cancelEdit = () => {
-  role.value = props.user.role
-  rubricIds.value = props.user.rubricIds ?? []
-  teamIds.value = props.user.teamIds ?? []
-  editing.value = false
-}
-const deleteUser = () => { editing.value = false }
-
 </script>
 
 <template>
 <TableRow>
-  <TableCell>{{ user.uid }}</TableCell>
+  <TableCell>{{ user.email.replace("@sed-marking.com", "") }}</TableCell>
   <TableCell>{{ user.displayName }}</TableCell>
-  <TableCell>{{ user.role }}</TableCell>
-  <TableCell class="flex flex-row flex-wrap gap-1">
-    <Badge v-for="rubricId in rubricIds" :key="rubricId">{{ rubricId }}</Badge>
+  <TableCell>
+    <div class="flex flex-row gap-1">
+      <Badge v-for="role in user.roles" :key="role">{{ role }}</Badge>
+    </div>
   </TableCell>
   <TableCell>
-    <Badge v-for="teamId in teamIds" :key="teamId">{{ teamId }}</Badge>
+    <div class="flex flex-row flex-wrap gap-1">
+      <Badge v-for="rubricId in user.rubricIds" :key="rubricId">{{ rubricId }}</Badge>
+    </div>
+  </TableCell>
+  <TableCell>
+    <div class="flex flex-row flex-wrap gap-1">
+      <Badge v-for="teamId in user.teamIds" :key="teamId">{{ teamId }}</Badge>
+    </div>
   </TableCell>
 </TableRow>
 <!-- <Card>

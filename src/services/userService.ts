@@ -7,6 +7,7 @@ import {
   where,
   setDoc,
   writeBatch,
+  orderBy,
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore'
@@ -26,52 +27,59 @@ interface CreateUserPayload {
  * 🚀 PROVISION USER: Creates the User document profile and handles
  * atomic cross-junction generation for assessors inside a single transaction batch.
  */
-export async function provisionNewUser(payload: CreateUserPayload): Promise<void> {
-  const batch = writeBatch(db)
+ export async function provisionNewUser(payload: {
+   id: string // The UID passed from Auth
+   displayName: string
+   email: string
+   roles: string[]
+   rubricIds?: string[]
+   teamIds?: string[]
+ }): Promise<void> {
+   const batch = writeBatch(db)
+   const userDocRef = doc(db, 'users', payload.id)
+   const isAssessor = payload.roles.includes('assessor')
 
-  const userDocRef = doc(db, 'users', payload.id)
-  const isAssessor = payload.roles.includes('assessor')
+   // 1. Prepare profile structure. Setting isDisabled to false handles re-activation.
+   const userData = {
+     id: payload.id,
+     displayName: payload.displayName.trim(),
+     email: payload.email.trim().toLowerCase(),
+     roles: payload.roles,
+     rubricIds: isAssessor ? payload.rubricIds || [] : [],
+     teamIds: isAssessor ? payload.teamIds || [] : [],
+     isDisabled: false // 🔄 Resets the soft-delete flag automatically if re-enabled
+   }
 
-  // 1. Prepare clean base user payload map structure
-  const userData: User = {
-    id: payload.id,
-    displayName: payload.displayName.trim(),
-    email: payload.email.trim().toLowerCase(),
-    roles: payload.roles as any,
-    // Store arrays on the profile for fast local evaluation context checking
-    rubricIds: isAssessor ? payload.rubricIds || [] : [],
-    teamIds: isAssessor ? payload.teamIds || [] : []
-  }
+   // merge: true makes this safe for both brand new docs and existing disabled docs
+   batch.set(userDocRef, userData, { merge: true })
 
-  // Add the user doc creation operation to the atomic pipeline block
-  batch.set(userDocRef, userData)
+   // 2. Clear out any stale assignments just in case this user existed before
+   const assignmentsCollectionRef = collection(db, 'assignments')
+   const oldAssignmentsQuery = query(assignmentsCollectionRef, where('assessorId', '==', payload.id))
+   const oldAssignmentsSnapshot = await getDocs(oldAssignmentsQuery)
+   oldAssignmentsSnapshot.docs.forEach((doc) => {
+     batch.delete(doc.ref)
+   })
 
-  // 2. Cross-reference assignment records if the user acts as an assessor matrix node
-  if (isAssessor && payload.rubricIds && payload.teamIds) {
-    const assignmentsCollectionRef = collection(db, 'assignments')
+   // 3. Build out fresh cross-product assignments if they are an assessor
+   if (isAssessor && payload.rubricIds && payload.teamIds) {
+     payload.rubricIds.forEach((rubricId) => {
+       payload.teamIds!.forEach((teamId) => {
+         const assignmentDocRef = doc(assignmentsCollectionRef)
+         const assignmentData: Assignment = {
+           id: assignmentDocRef.id,
+           assessorId: payload.id,
+           teamId: teamId,
+           rubricId: rubricId,
+           assignedAt: serverTimestamp() as Timestamp
+         }
+         batch.set(assignmentDocRef, assignmentData)
+       })
+     })
+   }
 
-    // Generate a cartesian cross-product junction entry for every rubric-to-team link pair
-    payload.rubricIds.forEach((rubricId) => {
-      payload.teamIds!.forEach((teamId) => {
-        const assignmentDocRef = doc(assignmentsCollectionRef) // Auto-generated UUID
-
-        const assignmentData: Assignment = {
-          id: assignmentDocRef.id,
-          assessorId: payload.id,
-          teamId: teamId,
-          rubricId: rubricId,
-          assignedAt: serverTimestamp() as Timestamp
-        }
-
-        batch.set(assignmentDocRef, assignmentData)
-      })
-    })
-  }
-
-  // 3. Commit the entire bundle to Firestore atomically.
-  // If one assignment write drops, the user record is safely rolled back.
-  await batch.commit()
-}
+   await batch.commit()
+ }
 
 /**
  * 🔄 UPDATE ASSIGNMENTS: Syncs the profile array maps for an existing user.
@@ -157,6 +165,128 @@ export async function syncAssessorAssignments(
     console.log(`Successfully synced all junction targets for Assessor [${userId}].`)
   } catch (error) {
     console.error(`Failed to overwrite assignment junction targets for [${userId}]:`, error)
+    throw error
+  }
+}
+
+/**
+ * 📥 RETRIEVE ALL: Fetches all user records from Firestore.
+ * The rubricIds and teamIds arrays are naturally included inside each user object.
+ */
+export async function getAllUsersWithProfileAssignments(): Promise<User[]> {
+  try {
+    const usersQuery = query(collection(db, 'users'), orderBy('displayName', 'asc'))
+    const snapshot = await getDocs(usersQuery)
+
+    // Maps documents directly into the strict User interface structure
+    return snapshot.docs.map(doc => doc.data() as User)
+  } catch (error) {
+    console.error('Failed to retrieve system users and profile assignments:', error)
+    throw error
+  }
+}
+
+interface UpdateUserPayload {
+  id: string // The target user's UID to update
+  displayName: string
+  roles: string[]
+  rubricIds?: string[]
+  teamIds?: string[]
+}
+
+/**
+ * 🔄 UPDATE PROFILE & ASSIGNMENTS: Updates a user's core metadata and fully synchronizes
+ * both their profile arrays and active /assignments collection mapping structures.
+ */
+export async function updateExistingUserAndAssignments(payload: UpdateUserPayload): Promise<void> {
+  const batch = writeBatch(db)
+  const userDocRef = doc(db, 'users', payload.id)
+  const isAssessor = payload.roles.includes('assessor')
+
+  // 1. Prepare clean updated user data profile layout structures
+  const updatedUserData: Partial<User> = {
+    displayName: payload.displayName.trim(),
+    roles: payload.roles as any,
+    // If they are an assessor, store the clean tracking arrays; otherwise, reset them
+    rubricIds: isAssessor ? payload.rubricIds || [] : [],
+    teamIds: isAssessor ? payload.teamIds || [] : []
+  }
+
+  // Queue the profile update operation into the batch pipeline
+  batch.update(userDocRef, updatedUserData)
+
+  try {
+    // 2. Clear out ALL existing junction link entries matching this assessorId first
+    const assignmentsCollectionRef = collection(db, 'assignments')
+    const oldAssignmentsQuery = query(assignmentsCollectionRef, where('assessorId', '==', payload.id))
+    const oldAssignmentsSnapshot = await getDocs(oldAssignmentsQuery)
+
+    oldAssignmentsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    // 3. If the user still holds the assessor role, generate the new cross-product junction matrix
+    if (isAssessor && payload.rubricIds && payload.teamIds) {
+      payload.rubricIds.forEach((rubricId) => {
+        payload.teamIds!.forEach((teamId) => {
+          const newAssignmentDocRef = doc(assignmentsCollectionRef) // Generates a fresh structural ID
+
+          const assignmentData: Assignment = {
+            id: newAssignmentDocRef.id,
+            assessorId: payload.id,
+            teamId: teamId,
+            rubricId: rubricId,
+            assignedAt: serverTimestamp() as Timestamp
+          }
+
+          batch.set(newAssignmentDocRef, assignmentData)
+        })
+      })
+    }
+
+    // 4. Commit all mutations atomically
+    await batch.commit()
+    console.log(`Successfully synchronized profiles and assignments for User [${payload.id}]`)
+  } catch (error) {
+    console.error(`Failed to execute administrative update workflow for user [${payload.id}]:`, error)
+    throw error
+  }
+}
+
+/**
+ * 🗑️ SOFT-DELETE / DEACTIVATE USER: Instantly disables a user account profile,
+ * revokes access clearance capabilities, and purges all live assignment junctions.
+ *
+ * @param userId The unique Firestore document ID (UID) of the target user
+ */
+export async function administrativeDeleteUser(userId: string): Promise<void> {
+  const batch = writeBatch(db)
+  const userDocRef = doc(db, 'users', userId)
+
+  // 1. Clear out the profile details, reset arrays, and explicitly flag as disabled
+  batch.update(userDocRef, {
+    roles: [],          // Strips access permissions instantly
+    rubricIds: [],      // Clears tracking context
+    teamIds: [],        // Clears team links
+    isDisabled: true,   // Used for explicit Firestore security rules blocking
+    deletedAt: new Date()
+  })
+
+  try {
+    // 2. Locate and wipe all junction evaluation entries matching this assessorId
+    const assignmentsCollectionRef = collection(db, 'assignments')
+    const assessorAssignmentsQuery = query(assignmentsCollectionRef, where('assessorId', '==', userId))
+    const assignmentsSnapshot = await getDocs(assessorAssignmentsQuery)
+
+    assignmentsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+
+    // 3. Commit the structural destruction batch pipelines atomically
+    await batch.commit()
+    console.log(`User [${userId}] successfully deactivated and decoupled from all allocation metrics.`)
+  } catch (error) {
+    console.error(`Failed to execute administrative account deletion for [${userId}]:`, error)
     throw error
   }
 }
