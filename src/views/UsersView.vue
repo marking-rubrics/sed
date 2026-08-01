@@ -12,7 +12,7 @@ import { PhPlus } from '@phosphor-icons/vue'
 
 
 const currentUser = {
-  uid: 'user',
+  id: 'user',
   role: 'Admin' as UserRole,
   displayName: 'User Display Name',
   rubricIds: ['fdssaf', 'fsdafa'],
@@ -21,7 +21,7 @@ const currentUser = {
 
 const otherUsers = [
   {
-    uid: 'asdfljlj',
+    id: 'asdfljlj',
     role: 'Admin' as UserRole,
     displayName: 'idhsuocahsdocois',
     rubricIds: [''],
@@ -37,7 +37,7 @@ const openEditor = () => { showEditor.value = true }
 const closeEditor = () => { showEditor.value = false }
 const userInEditor = ref<User>(createEmptyUser())
 const sendToEditor = (user: User) => {
-  if (userInEditor.value.uid == user.uid && showEditor.value) {
+  if (userInEditor.value.id == user.id && showEditor.value) {
     closeEditor()
   } else {
     userInEditor.value = user
