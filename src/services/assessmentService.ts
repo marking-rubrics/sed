@@ -1,13 +1,13 @@
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  setDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  query,
+  where,
   orderBy,
   serverTimestamp,
-  Timestamp 
+  Timestamp
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { AssessedRubric, AssessedComponent } from '@/types'
@@ -29,9 +29,9 @@ export async function getExistingAssessment(
   )
   const snapshot = await getDocs(q)
   if (snapshot.empty) return null
-  
-  const docData = snapshot.docs[0].data()
-  return { id: snapshot.docs[0].id, ...docData } as AssessedRubric
+
+  const docData = snapshot.docs[0]!.data()
+  return { id: snapshot.docs[0]!.id, ...docData } as AssessedRubric
 }
 
 /**

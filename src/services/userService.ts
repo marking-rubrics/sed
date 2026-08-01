@@ -1,6 +1,7 @@
-import { 
-  collection, 
-  doc, 
+import {
+  collection,
+  doc,
+  getDoc,
   getDocs,
   query,
   where,
@@ -22,12 +23,12 @@ interface CreateUserPayload {
 }
 
 /**
- * 🚀 PROVISION USER: Creates the User document profile and handles 
+ * 🚀 PROVISION USER: Creates the User document profile and handles
  * atomic cross-junction generation for assessors inside a single transaction batch.
  */
 export async function provisionNewUser(payload: CreateUserPayload): Promise<void> {
   const batch = writeBatch(db)
-  
+
   const userDocRef = doc(db, 'users', payload.id)
   const isAssessor = payload.roles.includes('assessor')
 
@@ -53,7 +54,7 @@ export async function provisionNewUser(payload: CreateUserPayload): Promise<void
     payload.rubricIds.forEach((rubricId) => {
       payload.teamIds!.forEach((teamId) => {
         const assignmentDocRef = doc(assignmentsCollectionRef) // Auto-generated UUID
-        
+
         const assignmentData: Assignment = {
           id: assignmentDocRef.id,
           assessorId: payload.id,
@@ -74,7 +75,7 @@ export async function provisionNewUser(payload: CreateUserPayload): Promise<void
 
 /**
  * 🔄 UPDATE ASSIGNMENTS: Syncs the profile array maps for an existing user.
- * (Note: If you need to completely overwrite junction targets, you can expand this 
+ * (Note: If you need to completely overwrite junction targets, you can expand this
  * to wipe old /assignments documents matching the assessorId before appending new ones).
  */
 export async function updateAssessorAssignments(
@@ -84,7 +85,7 @@ export async function updateAssessorAssignments(
 ): Promise<void> {
   try {
     const userDocRef = doc(db, 'users', userId)
-    
+
     await setDoc(userDocRef, {
       rubricIds,
       teamIds
@@ -101,7 +102,7 @@ export async function updateAssessorAssignments(
 export async function getUserClearanceProfile(userId: string): Promise<User | null> {
   const docRef = doc(db, 'users', userId)
   const snapshot = await getDoc(docRef)
-  
+
   if (!snapshot.exists()) return null
   return snapshot.data() as User
 }
@@ -116,7 +117,7 @@ export async function syncAssessorAssignments(
   newTeamIds: string[]
 ): Promise<void> {
   const batch = writeBatch(db)
-  
+
   // 1. Reference the user document and update their tracking arrays
   const userDocRef = doc(db, 'users', userId)
   batch.update(userDocRef, {
@@ -138,7 +139,7 @@ export async function syncAssessorAssignments(
     newRubricIds.forEach((rubricId) => {
       newTeamIds.forEach((teamId) => {
         const newAssignmentDocRef = doc(assignmentsCollectionRef) // Generates fresh ID
-        
+
         const assignmentData: Assignment = {
           id: newAssignmentDocRef.id,
           assessorId: userId,
