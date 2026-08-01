@@ -1,5 +1,4 @@
-import type { RubricComponent } from '@/types/rubric'
-import type { AssessedComponent } from '@/types/assessment'
+import type { RubricComponent, AssessedComponent } from '@/types'
 
 /**
  * Recursively maps existing grading history nodes onto the current master rubric structure.
