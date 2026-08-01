@@ -9,7 +9,7 @@ import {
   orderBy 
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { Team } from '@/types/team'
+import type { Team } from '@/types'
 
 /**
  * 🚀 CREATE: Provision a brand new team document inside Firestore.
