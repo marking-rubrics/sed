@@ -53,6 +53,10 @@ export async function saveAssessment(
     components: assessment.components
   }
 
+  console.log(docRef)
+
+  console.log(payload)
+
   await setDoc(docRef, payload)
 }
 
@@ -71,7 +75,7 @@ export async function getAllAssessmentsForRubric(rubricId: string): Promise<Asse
 
 /**
  * 🗑️ DELETE ASSESSMENT: Permanently purges an evaluation entry from Firestore.
- * 
+ *
  * @param assessmentId The unique document ID inside the /assessedRubrics collection
  */
 export async function deleteAssessmentEntry(assessmentId: string): Promise<void> {

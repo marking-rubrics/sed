@@ -8,12 +8,16 @@ import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncre
 import { Textarea } from '@/components/ui/textarea';
 import type { RubricComponent, RubricLevel } from '@/types';
 import { ref } from 'vue';
+import { useNestedGrading } from '@/composables/useNestedGrading';
 
-defineProps<{
+const props = defineProps<{
   component: RubricComponent;
   levels: RubricLevel[];
   maxScore: number;
+  indices: number[];
 }>();
+
+const { score, comment } = useNestedGrading(props.indices);
 
 const showRubric = ref(false);
 
@@ -26,7 +30,7 @@ const toggleView = () => {
 <Card class="flex flex-col m-2">
   <CardHeader>
     <CardTitle>
-      <div class="text-sm">{{ component.name }}</div>
+      <div class="text-sm">{{ indices.map(i => i + 1).join('.') }} {{ component.name }}</div>
     </CardTitle>
     <CardAction>
       <Button variant="ghost" @click="toggleView">
@@ -43,7 +47,7 @@ const toggleView = () => {
     </Accordion>
 
     <div class="flex flex-row w-full justify-center">
-      <NumberField class="w-full" :min="0" :max="maxScore" :step="0.1" :defaultValue="0" :format-options="{
+      <NumberField class="w-full" v-model="score" :min="0" :max="maxScore" :step="0.1" :defaultValue="0" :format-options="{
         minimumFractionDigits: 1,
       }">
         <NumberFieldContent>
@@ -58,7 +62,7 @@ const toggleView = () => {
       <FieldLabel>
         Comment
       </FieldLabel>
-      <Textarea class="w-full h-[100px]" />
+      <Textarea class="w-full h-[100px]" v-model="comment" />
     </Field>
   </CardContent>
 </Card>

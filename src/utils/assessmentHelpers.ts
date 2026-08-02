@@ -16,7 +16,7 @@ export function syncAssessmentWithRubric(
 
     const assessedNode: AssessedComponent = {
       componentId: rubricComp.id,
-      score: historicalNode?.score ?? undefined,
+      score: historicalNode?.score ?? 0,
       comment: historicalNode?.comment ?? ''
     }
 

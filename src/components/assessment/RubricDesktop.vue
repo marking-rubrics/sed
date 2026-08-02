@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { Rubric, AssessedRubric } from "@/types"
+import type { Rubric, AssessedRubric, AssessedComponent } from "@/types"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
 import RubricComponentDesktop from "./RubricComponentDesktop.vue"
 
 defineProps<{
-  rubric: Rubric | undefined
-  assessedRubric: AssessedRubric | undefined
+  rubric: Rubric
+  assessedComponents: AssessedComponent[]
 }>()
 </script>
 
@@ -13,20 +13,21 @@ defineProps<{
 <Table v-if="rubric" class="w-full">
   <TableHeader>
     <TableRow>
-      <TableHead class="px-4">Criteria</TableHead>
-      <TableHead class="w-auto whitespace-nowrap px-4 text-center">Weightage</TableHead>
+      <TableHead class="w-0 px-4"></TableHead>
+      <TableHead class="w-0 px-4">Criteria</TableHead>
+      <TableHead class="w-0 whitespace-nowrap px-4 text-center">Weightage</TableHead>
       <TableHead v-for="level in rubric.levels" :key="level.descriptor"
         class="text-center px-4"
       >
         {{ level.descriptor }}<br/>{{ level.range }}
       </TableHead>
-      <TableHead class="w-auto whitespace-nowrap text-center">Score</TableHead>
-      <TableHead class="w-auto whitespace-nowrap text-center">Feedback</TableHead>
+      <TableHead class="w-0 whitespace-nowrap text-center">Score</TableHead>
+      <TableHead class="w-0 whitespace-nowrap text-center">Feedback</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
-    <template v-for="component in rubric.components" :key="component.id">
-      <RubricComponentDesktop :component="component" :maxScore="rubric.maxScore" />
+    <template v-for="(component, index) in rubric.components" :key="component.id">
+      <RubricComponentDesktop :component="component" :maxScore="rubric.maxScore" :indices="[index]" />
     </template>
   </TableBody>
 </Table>

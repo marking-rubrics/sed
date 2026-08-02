@@ -18,41 +18,64 @@ onMounted(async () => {
 })
 
 import { useAssessmentStore } from '@/stores/assessments'
+import { Alert } from '@/components/ui/alert'
+import { PhCheckCircle, PhFloppyDisk } from '@phosphor-icons/vue'
 const assessmentStore = useAssessmentStore()
 
 const prepareAssessment = async () => {
   if (userStore.currentUser?.id && selectedRubricId.value && selectedTeamId.value) {
     try {
-      await assessmentStore.prepareEvaluationCanvas(userStore.currentUser?.id, selectedTeamId.value, selectedRubricId.value)
+      await assessmentStore.prepareEvaluationCanvas(
+        userStore.currentUser?.id,
+        selectedTeamId.value,
+        selectedRubricId.value
+      )
+      assessmentStore.initializeAutosaveWatcher(
+        userStore.currentUser.id,
+        selectedTeamId.value
+      )
     } catch (error) {
       console.error('Failed to prepare assessment canvas:', error)
     }
   }
 }
 
-const selectedRubricId = ref<string | undefined>(undefined)
-watch(
-  () => selectedRubricId.value,
-  async (newId) => {
-    if (newId) {
-      try {
-        await assessmentStore.fetchAndSetActiveRubric(newId)
-        await prepareAssessment()
-      } catch (error) {
-        console.error('Failed to swap active rubric view matrix:', error)
-      }
-    } else {
-      assessmentStore.activeRubric = null
-    }
+const allowedRubrics = computed(() => {
+  if (userStore.currentUser?.rubricIds) {
+    return rubrics.value.filter((r: RubricLookup) => userStore.currentUser?.rubricIds!.includes(r.id))
   }
-)
-// const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id === selectedRubric.value))
+  return []
+})
+const allowedTeams = computed(() => {
+  if (userStore.currentUser?.teamIds) {
+    return teams.value.filter((t: Team) => userStore.currentUser?.teamIds!.includes(t.id))
+  }
+  return []
+})
+
+
+const selectedRubricId = ref<string | undefined>(undefined)
 const selectedTeamId = ref<string | undefined>(undefined)
 watch(
-  () => selectedTeamId.value,
-  async (newTeamId) => {
-    if (newTeamId) {
-      await prepareAssessment()
+  [() => selectedRubricId.value, () => selectedTeamId.value],
+  async ([newRubricId, newTeamId], [oldRubricId, oldTeamId]) => {
+
+    // 🧼 1. ALWAYS wipe the canvas immediately if an active selection changes
+    assessmentStore.resetWorkspace()
+
+    // 2. Fetch the new configuration if BOTH parameters are present
+    if (newRubricId && newTeamId) {
+      try {
+        // Only load the rubric into memory if it actually changed
+        if (newRubricId !== oldRubricId) {
+          await assessmentStore.fetchAndSetActiveRubric(newRubricId)
+        }
+
+        // Prepare canvas and spin up the autosaver thread
+        await prepareAssessment()
+      } catch (error) {
+        console.error('Failed to swap evaluation workspace context:', error)
+      }
     }
   }
 )
@@ -61,32 +84,46 @@ watch(
 
 <template>
 <div class="flex flex-col gap-2 mt-2">
-  {{ userStore.currentUser }}
+  <!-- {{ userStore.currentUser }} -->
   <div class="flex flex-row flex-wrap items-center gap-2">
     <Select v-model="selectedTeamId">
-      <SelectTrigger class="w-full sm:w-2xs" :class="selectedTeamId ? 'bg-teal-100' : 'bg-red-100'">
+      <SelectTrigger class="w-full sm:flex-1" :class="selectedTeamId ? 'bg-teal-100' : 'bg-red-100'">
         <SelectValue placeholder="Select a team" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="team in teams" :value="team.id">{{ team.name }}</SelectItem>
+        <SelectItem v-for="team in allowedTeams" :value="team.id">{{ team.name }}</SelectItem>
       </SelectContent>
     </Select>
     <Select v-model="selectedRubricId">
-      <SelectTrigger class="w-full sm:w-2xs" :class="selectedRubricId ? 'bg-teal-100' : 'bg-red-100'">
+      <SelectTrigger class="w-full sm:flex-1" :class="selectedRubricId ? 'bg-teal-100' : 'bg-red-100'">
         <SelectValue placeholder="Select a rubric" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="rubric in rubrics" :value="rubric.id">{{ rubric.title }}</SelectItem>
+        <SelectItem v-for="rubric in allowedRubrics" :value="rubric.id">{{ rubric.title }}</SelectItem>
       </SelectContent>
     </Select>
   </div>
 
-  <div class="flex flex-row items-start h-full w-full" v-if="selectedRubricId && selectedTeamId">
+  <!-- <div>
+    {{ assessmentStore.activeRubric }}
+  </div>
+
+  <div>
+    {{ assessmentStore.gradingComponents }}
+  </div> -->
+
+  <Alert v-if="assessmentStore.activeRubric" :variant="assessmentStore.isSaving ? 'destructive' : assessmentStore.isDirty ? 'destructive' : 'default'">
+    <PhCheckCircle v-if="!assessmentStore.isDirty" />
+    <PhFloppyDisk v-else />
+    <span>{{ assessmentStore.isSaving ? 'Saving...' : assessmentStore.isDirty ? 'Unsaved changes' : 'Changes saved' }}</span>
+  </Alert>
+
+  <div class="flex flex-row items-start h-full w-full" v-if="selectedRubricId && selectedTeamId && assessmentStore.activeRubric">
     <div class="flex-1 overflow-x-auto hidden md:block">
-      <RubricDesktop :rubric="selectedRubricData" :assessedRubric="assessedRubric" />
+      <RubricDesktop :rubric="assessmentStore.activeRubric as Rubric" :assessedComponents="assessmentStore.gradingComponents" />
     </div>
     <div class="flex-1 overflow-x-auto block md:hidden">
-      <RubricMobile :rubric="selectedRubricData" :assessedRubric="assessedRubric" />
+      <RubricMobile :rubric="assessmentStore.activeRubric as Rubric" :assessedComponents="assessmentStore.gradingComponents" />
     </div>
   </div>
 </div>
