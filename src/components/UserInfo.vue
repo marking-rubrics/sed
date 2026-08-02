@@ -11,9 +11,12 @@ import { Input } from '@/components/ui/input'
 import type { User } from '@/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 // import TagsInputWithListbox from './TagsInputWithListbox.vue'
+import type { RubricLookup, Team } from '@/types'
 
 const props = defineProps<{
   user: User
+  rubrics: RubricLookup[]
+  teams: Team[]
 }>()
 </script>
 
@@ -28,12 +31,12 @@ const props = defineProps<{
   </TableCell>
   <TableCell>
     <div class="flex flex-row flex-wrap gap-1">
-      <Badge v-for="rubricId in user.rubricIds" :key="rubricId">{{ rubricId }}</Badge>
+      <Badge v-for="rubricId in user.rubricIds" :key="rubricId">{{ rubrics.find(r => r.id === rubricId)?.title ?? rubricId }}</Badge>
     </div>
   </TableCell>
   <TableCell>
     <div class="flex flex-row flex-wrap gap-1">
-      <Badge v-for="teamId in user.teamIds" :key="teamId">{{ teamId }}</Badge>
+      <Badge v-for="teamId in user.teamIds" :key="teamId">{{ teams.find(t => t.id === teamId)?.name ?? teamId }}</Badge>
     </div>
   </TableCell>
 </TableRow>

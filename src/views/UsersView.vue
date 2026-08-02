@@ -35,10 +35,13 @@ const users = ref<User[]>([])
 const teams = ref<Team[]>([])
 const rubrics = ref<RubricLookup[]>([])
 onMounted(async () => {
-  users.value = await getAllUsersWithProfileAssignments()
   teams.value = await getAllTeams()
   rubrics.value = await getRubricsLookup()
+  await refreshUsers()
 })
+const refreshUsers = async () => {
+  users.value = await getAllUsersWithProfileAssignments()
+}
 
 const newUserName = ref("")
 const newEmail = computed(() => newUserName.value + "@sed-marking.com")
@@ -74,11 +77,13 @@ const updateUser = async (user: User) => {
     rubricIds: user.rubricIds,
     teamIds: user.teamIds
   })
-  users.value = await getAllUsersWithProfileAssignments()
+  await refreshUsers()
+  closeEditor()
 }
 const deleteUser = async (user: User) => {
   await administrativeDeleteUser(user.id)
-  users.value = await getAllUsersWithProfileAssignments()
+  await refreshUsers()
+  closeEditor()
 }
 </script>
 
@@ -103,7 +108,9 @@ const deleteUser = async (user: User) => {
         </TableHeader>
         <TableBody>
           <!-- <UserInfo :user="currentUser" class="w-full max-w-md" @click="sendToEditor(currentUser)"/> -->
-          <UserInfo v-for="user in manageableUsers" :key="user.id" :user="user" class="w-full max-w-md" @click="sendToEditor(user)"/>
+          <UserInfo v-for="user in manageableUsers" :key="user.id" :user="user" class="w-full max-w-md" @click="sendToEditor(user)"
+            :rubrics="rubrics" :teams="teams"
+          />
         </TableBody>
       </Table>
     </div>
@@ -111,7 +118,6 @@ const deleteUser = async (user: User) => {
     <aside class="sticky top-24 flex flex-row items-stretch self-start h-auto ml-5"
       :class="{ 'hidden': !showEditor }"
     >
-      <!-- <Separator orientation="vertical" class="mx-5 h-auto self-stretch"/> -->
       <UserEditor class="w-150"
         :user="userInEditor" :rubrics="rubrics" :teams="teams"
         @close="closeEditor" @update="updateUser" @delete="deleteUser"

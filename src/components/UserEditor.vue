@@ -73,7 +73,7 @@ const closeEditor = () => {
 
   <CardContent>
     <div class="flex flex-col">
-      {{ user }}
+      <!-- {{ user }} -->
       <FieldSet>
         <FieldGroup>
           <Field>

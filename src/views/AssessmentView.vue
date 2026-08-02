@@ -7,6 +7,8 @@ import type { Team, RubricLookup, Rubric, AssessedRubric } from '@/types'
 import { RubricDesktop, RubricMobile } from '@/components/assessment'
 import { getAllTeams } from '@/services/teamService'
 import { getRubricsLookup } from '@/services/rubricService'
+import { useUserStore } from '@/stores/users'
+const userStore = useUserStore()
 
 const teams = ref<Team[]>([])
 const rubrics = ref<RubricLookup[]>([])
@@ -18,6 +20,16 @@ onMounted(async () => {
 import { useAssessmentStore } from '@/stores/assessments'
 const assessmentStore = useAssessmentStore()
 
+const prepareAssessment = async () => {
+  if (userStore.currentUser?.id && selectedRubricId.value && selectedTeamId.value) {
+    try {
+      await assessmentStore.prepareEvaluationCanvas(userStore.currentUser?.id, selectedTeamId.value, selectedRubricId.value)
+    } catch (error) {
+      console.error('Failed to prepare assessment canvas:', error)
+    }
+  }
+}
+
 const selectedRubricId = ref<string | undefined>(undefined)
 watch(
   () => selectedRubricId.value,
@@ -25,6 +37,7 @@ watch(
     if (newId) {
       try {
         await assessmentStore.fetchAndSetActiveRubric(newId)
+        await prepareAssessment()
       } catch (error) {
         console.error('Failed to swap active rubric view matrix:', error)
       }
@@ -35,12 +48,20 @@ watch(
 )
 // const selectedRubricData = computed(() => rubrics.value.find((r: Rubric) => r.id === selectedRubric.value))
 const selectedTeamId = ref<string | undefined>(undefined)
-
+watch(
+  () => selectedTeamId.value,
+  async (newTeamId) => {
+    if (newTeamId) {
+      await prepareAssessment()
+    }
+  }
+)
 // const assessedRubric = ref<AssessedRubric | undefined>(undefined)
 </script>
 
 <template>
 <div class="flex flex-col gap-2 mt-2">
+  {{ userStore.currentUser }}
   <div class="flex flex-row flex-wrap items-center gap-2">
     <Select v-model="selectedTeamId">
       <SelectTrigger class="w-full sm:w-2xs" :class="selectedTeamId ? 'bg-teal-100' : 'bg-red-100'">
