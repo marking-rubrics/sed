@@ -34,15 +34,25 @@ async function fetchUserWithRoles(firebaseUser: any): Promise<User> {
   const userDocSnap = await getDoc(userDocRef)
 
   let assignedRoles: string[] = ['']
+  let assignedRubricIds: string[] = []
+  let assignedTeamIds: string[] = []
   if (userDocSnap.exists()) {
     const data = userDocSnap.data()
     if (Array.isArray(data.roles)) {
       assignedRoles = data.roles
     }
+    if (Array.isArray(data.rubricIds)) {
+      assignedRubricIds = data.rubricIds
+    }
+    if (Array.isArray(data.teamIds)) {
+      assignedTeamIds = data.teamIds
+    }
   }
 
   const result: User = formatUserFromServer(firebaseUser)
   result.roles = assignedRoles
+  result.rubricIds = assignedRubricIds
+  result.teamIds = assignedTeamIds
 
   return result
 }
