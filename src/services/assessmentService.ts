@@ -3,6 +3,7 @@ import {
   doc,
   getDocs,
   setDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -66,4 +67,20 @@ export async function getAllAssessmentsForRubric(rubricId: string): Promise<Asse
   )
   const snapshot = await getDocs(q)
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as AssessedRubric)
+}
+
+/**
+ * 🗑️ DELETE ASSESSMENT: Permanently purges an evaluation entry from Firestore.
+ * 
+ * @param assessmentId The unique document ID inside the /assessedRubrics collection
+ */
+export async function deleteAssessmentEntry(assessmentId: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'assessedRubrics', assessmentId)
+    await deleteDoc(docRef)
+    console.log(`Assessment entry [${assessmentId}] successfully purged.`)
+  } catch (error) {
+    console.error(`Failed to delete assessment entry [${assessmentId}]:`, error)
+    throw error
+  }
 }
