@@ -36,7 +36,7 @@ const isRoutePermitted = (allowedRoles: string[]): boolean => {
       </RouterLink>
     </Button>
     <div class="flex flex-row gap-1 items-center ms-auto select-none">
-      <div class="text-xs flex flex-row items-center"><span class="hidden md:flex">Logged in as &nbsp;</span><span class="font-bold">{{ getUsername(userStore.currentUser?.email) }}</span></div>
+      <div class="text-xs flex flex-row items-center"><span class="hidden md:flex">Logged in as &nbsp;</span><span class="font-bold">{{ userStore.currentUser?.displayName || getUsername(userStore.currentUser?.email) }}</span></div>
       <Button variant="destructive" title="Log out" @click="handleLogout"><PhSignOut/></Button>
     </div>
   </div>
