@@ -18,7 +18,7 @@ export function useNestedGrading(indices: number[]) {
     let current: any = assessmentStore.gradingComponents
 
     for (let i = 0; i < indices.length; i++) {
-      const targetIdx = indices[i]
+      const targetIdx = indices[i]!
 
       if (i === indices.length - 1) {
         return current[targetIdx]
