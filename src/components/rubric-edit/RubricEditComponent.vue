@@ -109,9 +109,12 @@ const addSub = () => {
           <Input v-model="component.name" />
         </TableCell>
         <TableCell class="w-auto whitespace-nowrap px-4 text-center">
-          <NumberField class="" :min="0" :max="100" :step="1"
+          <NumberField class="" :min="0" :max="100" :step="0.01"
             :defaultValue="0"
             v-model="component.weightage"
+            :format-options="{
+              minimumFractionDigits: 2,
+            }"
           >
             <NumberFieldContent>
               <NumberFieldDecrement />
