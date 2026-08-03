@@ -6,6 +6,8 @@ import { getCompleteRubric } from '@/services/rubricService'
 import { getAllAssessmentsForRubric } from '@/services/assessmentService'
 import { buildHeaderMatrix, getRubricMaxDepth } from '@/utils/rubricHeaderHelpers'
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@/components/ui/table'
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { PhChatTeardropDots } from '@phosphor-icons/vue'
 
 const props = defineProps<{
   rubricId: string
@@ -183,6 +185,24 @@ const getComponentScore = (record: any, componentIndicesPath: number[]): number 
   }
   return '-'
 }
+
+const getComponentComment = (record: any, componentIndicesPath: number[]): string => {
+  if (!record || !record.components) return ''
+
+  let current: any = record.components
+  for (let i = 0; i < componentIndicesPath.length; i++) {
+    const idx = componentIndicesPath[i]!
+    if (i === componentIndicesPath.length - 1) {
+      return current[idx]?.comment ?? ''
+    }
+    if (current[idx] && current[idx].subcomponents) {
+      current = current[idx].subcomponents
+    } else {
+      return ''
+    }
+  }
+  return ''
+}
 </script>
 
 <template>
@@ -239,11 +259,24 @@ const getComponentScore = (record: any, componentIndicesPath: number[]): number 
         </TableCell>
 
         <!-- 🔢 Leaf Scores Cell Output Map -->
-        <TableCell
-          v-for="cell in leafComponents"
-          :key="cell.id"
-        >
-          {{ getComponentScore(record, cell.pathCoordinates || []) }}
+        <TableCell v-for="cell in leafComponents"
+          :key="cell.id">
+            <div class="flex flex-row items-center">
+              <span class="flex-1 text-center">{{ getComponentScore(record, cell.pathCoordinates || []) }}</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <PhChatTeardropDots
+                      class="text-gray-500"
+                      :class="getComponentComment(record, cell.pathCoordinates || []) ? '' : 'invisible'"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent v-if="getComponentComment(record, cell.pathCoordinates || [])">
+                    <p>{{ getComponentComment(record, cell.pathCoordinates || []) }}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
         </TableCell>
 
         <!-- ✒️ Examiner Identity Column -->
