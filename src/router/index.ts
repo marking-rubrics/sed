@@ -71,7 +71,7 @@ router.beforeEach(async (to, from) => {
   // 1. Not signed in? Handle external redirect using window location
   if (requiresAuth && !isAuthenticated) {
     const targetPath = encodeURIComponent(to.fullPath)
-    window.location.assign(`/login.html?redirect=${targetPath}`)
+    window.location.assign(`${import.meta.env.BASE_URL}/login.html?redirect=${targetPath}`)
     return false
   }
 
