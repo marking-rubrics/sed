@@ -10,6 +10,7 @@ import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@
 const props = defineProps<{
   rubricId: string
   teams: Team[]
+  examiners?: Array<{ id: string; name: string }>
 }>()
 
 const rubric = ref<Rubric | null>(null)
@@ -76,51 +77,10 @@ const leafComponents = computed(() => {
 })
 
 /**
- * 🔍 EXAMINER IDENTITY LOOKUP
- * Extracts the assessor identifier tied to the team's assessment record.
+ * 🧮 SINGLE RECORD TOTAL WEIGHTED SCORE
  */
-const getTeamExaminer = (teamId: string): string => {
-  const record = assessments.value.find(a => a.teamId === teamId)
-  if (!record || !record.assessorId) return '-'
-
-  // If an examiners list prop is available, you can resolve the name here:
-  // const examiner = props.examiners?.find(e => e.id === record.assessorId)
-  // return examiner ? examiner.name : record.assessorId
-
-  return record.assessorId
-}
-
-/**
- * 🧮 LEAF SCORE LOOKUP FUNCTION
- * Recourses down a team's saved assessment entry tree following the exact
- * column coordinate path to find the matching node score.
- */
-const getTeamComponentScore = (teamId: string, componentIndicesPath: number[]): number | string => {
-  const record = assessments.value.find(a => a.teamId === teamId)
-  if (!record || !record.components) return '-' // No score submitted yet
-
-  let current: any = record.components
-  for (let i = 0; i < componentIndicesPath.length; i++) {
-    const idx = componentIndicesPath[i]!
-    if (i === componentIndicesPath.length - 1) {
-      return current[idx]?.score ?? '-'
-    }
-    if (current[idx] && current[idx].subcomponents) {
-      current = current[idx].subcomponents
-    } else {
-      return '-'
-    }
-  }
-  return '-'
-}
-
-/**
- * 🧮 TOTAL TEAM WEIGHTED SCORE
- * Calculates the final normalized result summary value out of 100 for a team.
- */
-const getTeamTotalScore = (teamId: string): number | string => {
-  const record = assessments.value.find(a => a.teamId === teamId)
-  if (!record || !record.components || !rubric.value) return '-'
+const getRecordTotalScore = (record: any): number => {
+  if (!record || !record.components || !rubric.value) return 0
 
   let accumulatedEarnedWeight = 0
   let totalConfiguredWeight = 0
@@ -148,6 +108,80 @@ const getTeamTotalScore = (teamId: string): number | string => {
 
   if (totalConfiguredWeight === 0) return 0
   return Math.round(((accumulatedEarnedWeight / totalConfiguredWeight) * 100) * 100) / 100
+}
+
+/**
+ * 🏗️ GROUP & SORT ASSESSMENTS BY TEAM
+ * Groups rows by team and calculates the team's overall average total score.
+ */
+const sortedGroupedAssessments = computed(() => {
+  if (!assessments.value.length) return []
+
+  // 1. Group records by teamId
+  const groups: Record<string, any[]> = {}
+  assessments.value.forEach(record => {
+    if (!groups[record.teamId]) {
+      groups[record.teamId] = []
+    }
+    groups[record.teamId]!.push({
+      ...record,
+      totalScore: getRecordTotalScore(record)
+    })
+  })
+
+  // 2. Build sorted array with calculated structural metadata
+  const result: any[] = []
+
+  // Sort based on your configured teams array sequence
+  props.teams.forEach(team => {
+    const teamRecords = groups[team.id] || []
+    if (teamRecords.length === 0) return
+
+    // Calculate the team average total score
+    const sum = teamRecords.reduce((acc, rec) => acc + rec.totalScore, 0)
+    const averageScore = Math.round((sum / teamRecords.length) * 100) / 100
+
+    teamRecords.forEach((record, index) => {
+      result.push({
+        ...record,
+        teamName: team.name,
+        isFirstOfGroup: index === 0,
+        groupSize: teamRecords.length,
+        averageTotalScore: averageScore
+      })
+    })
+  })
+
+  return result
+})
+
+const getTeamName = (teamId: string): string => {
+  const team = props.teams.find(t => t.id === teamId)
+  return team ? team.name : 'Unknown Team'
+}
+
+const getExaminerName = (assessorId: string): string => {
+  if (!assessorId) return '-'
+  const examiner = props.examiners?.find(e => e.id === assessorId)
+  return examiner ? examiner.name : assessorId
+}
+
+const getComponentScore = (record: any, componentIndicesPath: number[]): number | string => {
+  if (!record || !record.components) return '-'
+
+  let current: any = record.components
+  for (let i = 0; i < componentIndicesPath.length; i++) {
+    const idx = componentIndicesPath[i]!
+    if (i === componentIndicesPath.length - 1) {
+      return current[idx]?.score ?? '-'
+    }
+    if (current[idx] && current[idx].subcomponents) {
+      current = current[idx].subcomponents
+    } else {
+      return '-'
+    }
+  }
+  return '-'
 }
 </script>
 
@@ -182,39 +216,58 @@ const getTeamTotalScore = (teamId: string): number | string => {
 
         <!-- Top Right Column Total Score Aggregator Anchor -->
         <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth">
-          Total Score
+          Assessor Score
+        </TableHead>
+
+        <!-- AGGREGATED AVERAGE COLUMN HEADER -->
+        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth">
+          Average Score
         </TableHead>
       </TableRow>
     </TableHeader>
 
+
     <TableBody>
-      <TableRow v-for="team in teams" :key="team.id">
-        <!-- 👥 Team Name Label Node -->
-        <TableCell>
-          {{ team.name }}
+      <TableRow v-for="record in sortedGroupedAssessments" :key="record.id">
+
+        <!-- 👥 Spanned Team Name Cell (Only renders once per team block) -->
+        <TableCell
+          v-if="record.isFirstOfGroup"
+          :rowspan="record.groupSize"
+        >
+          {{ record.teamName }}
         </TableCell>
 
-        <!-- 🔢 Criteria Leaves Matrix Iteration Loop -->
-        <!--
-          Note: To ensure column cells render in the exact structural path ordering,
-          we loop over rowCells from the bottom level layer of the header Rows matrix.
-        -->
+        <!-- 🔢 Leaf Scores Cell Output Map -->
         <TableCell
           v-for="cell in leafComponents"
           :key="cell.id"
         >
-          <!-- To query the index path array accurately, pass the item down via a search utility mapping -->
-          {{ getTeamComponentScore(team.id, cell.pathCoordinates || []) }}
+          {{ getComponentScore(record, cell.pathCoordinates || []) }}
         </TableCell>
 
-        <!-- ✒️ EXAMINER CELL VALUE -->
+        <!-- ✒️ Examiner Identity Column -->
         <TableCell>
-          {{ getTeamExaminer(team.id) }}
+          {{ getExaminerName(record.assessorId) }}
         </TableCell>
 
-        <!-- 🧮 Overall Normalization Mark Cell -->
+        <!-- 🎖️ Raw Assessor Total Score -->
         <TableCell>
-          {{ getTeamTotalScore(team.id) }}<span v-if="getTeamTotalScore(team.id) !== '-'" class="text-[10px] text-slate-400 font-normal">/100</span>
+          {{ record.totalScore }}<span class="text-[10px] text-slate-400 font-normal">/100</span>
+        </TableCell>
+
+        <!-- 🧮 Spanned Aggregated Team Average Cell (Only renders once per team block) -->
+        <TableCell
+          v-if="record.isFirstOfGroup"
+          :rowspan="record.groupSize"
+        >
+          {{ record.averageTotalScore }}<span class="text-[10px] text-teal-600/70 font-normal">/100</span>
+        </TableCell>
+      </TableRow>
+
+      <TableRow v-if="sortedGroupedAssessments.length === 0">
+        <TableCell :colspan="leafComponents.length + 4" class="text-center py-8 text-slate-400">
+          No grading evaluations submitted yet for this rubric configuration.
         </TableCell>
       </TableRow>
     </TableBody>
