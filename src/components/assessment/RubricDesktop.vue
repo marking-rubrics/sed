@@ -7,6 +7,9 @@ defineProps<{
   rubric: Rubric
   assessedComponents: AssessedComponent[]
 }>()
+
+import { useAssessmentStore } from '@/stores/assessments'
+const assessmentStore = useAssessmentStore()
 </script>
 
 <template>
@@ -29,6 +32,14 @@ defineProps<{
     <template v-for="(component, index) in rubric.components" :key="component.id">
       <RubricComponentDesktop :component="component" :maxScore="rubric.maxScore" :indices="[index]" />
     </template>
+    <TableRow>
+      <TableCell class="text-right font-bold" :colspan="rubric.levels.length + 3">
+        Total Score
+      </TableCell>
+      <TableCell class="text-center font-black">
+        {{ assessmentStore.totalScore }} %
+      </TableCell>
+    </TableRow>
   </TableBody>
 </Table>
 </template>

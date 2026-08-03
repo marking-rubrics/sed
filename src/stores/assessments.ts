@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { AssessedComponent, Rubric } from '@/types'
 import { getExistingAssessment, saveAssessment } from '@/services/assessmentService'
 import { syncAssessmentWithRubric } from '@/utils/assessmentHelpers'
@@ -206,6 +206,61 @@ export const useAssessmentStore = defineStore('assessmentWorkspace', () => {
     error.value = null
   }
 
+  /**
+    * 🧮 TOTAL SCORE GETTER: Recursively calculates the overall aggregated mark.
+    * Dynamically handles cases where the total weightage sums to values other than 100.
+    */
+  const totalScore = computed(() => {
+    if (!activeRubric.value || !gradingComponents.value.length) return 0
+
+    let accumulatedEarnedWeight = 0
+    let totalConfiguredWeight = 0
+
+    // Recursive traversal function
+    function traverseNode(rubricComp: any, gradingComp: any) {
+      // 🌿 Leaf Node detected (No subcomponents)
+      if (!rubricComp.subcomponents || rubricComp.subcomponents.length === 0) {
+        const score = gradingComp?.score ?? 0
+        const maxScore = activeRubric.value!.maxScore ?? 1 // Prevent division by zero
+        const weightage = rubricComp.weightage ?? 0
+
+        accumulatedEarnedWeight += (score / maxScore) * weightage
+        totalConfiguredWeight += weightage
+        return
+      }
+
+      // 🌿 Branch Node: Traverse deeper into all nested subcomponents
+      if (rubricComp.subcomponents && gradingComp?.subcomponents) {
+        for (let i = 0; i < rubricComp.subcomponents.length; i++) {
+          traverseNode(
+            rubricComp.subcomponents[i],
+            gradingComp.subcomponents[i]
+          )
+        }
+      }
+    }
+
+    // Begin traversing from the root level components
+    for (let i = 0; i < activeRubric.value.components.length; i++) {
+      traverseNode(
+        activeRubric.value.components[i],
+        gradingComponents.value[i]
+      )
+    }
+
+    // Safety fallback to prevent division by zero if weights aren't loaded properly
+    if (totalConfiguredWeight === 0) return 0
+
+    // Option A: Normalize the final score out of 100%
+    const normalizedScore = (accumulatedEarnedWeight / totalConfiguredWeight) * 100
+    return Math.round(normalizedScore * 100) / 100
+
+    /*
+    // Option B: If you prefer the absolute raw score (e.g. 35 out of 50 total weight points):
+    // return Math.round(accumulatedEarnedWeight * 100) / 100
+    */
+  })
+
   return {
     // Reactive Properties State
     activeAssessmentId,
@@ -221,6 +276,9 @@ export const useAssessmentStore = defineStore('assessmentWorkspace', () => {
     prepareEvaluationCanvas,
     initializeAutosaveWatcher,
     // submitEvaluation: executeSave, // Alias for manual form submission overrides
-    resetWorkspace
+    resetWorkspace,
+
+    // Computed Properties
+    totalScore,
   }
 })
