@@ -7,7 +7,8 @@ import { getAllAssessmentsForRubric } from '@/services/assessmentService'
 import { buildHeaderMatrix, getRubricMaxDepth } from '@/utils/rubricHeaderHelpers'
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@/components/ui/table'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
-import { PhChatTeardropDots } from '@phosphor-icons/vue'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { PhChatTeardropDots, PhExam, PhSortAscending, PhSortDescending, PhTextbox } from '@phosphor-icons/vue'
 
 const props = defineProps<{
   rubricId: string
@@ -18,6 +19,15 @@ const props = defineProps<{
 const rubric = ref<Rubric | null>(null)
 const assessments = ref<any[]>([])
 const isLoading = ref(true)
+
+const sortBy = ref<'team' | 'average'>('team')
+const sortOrder = ref<'asc' | 'desc'>('asc')
+watch(() => sortBy.value, (newSortBy, oldSortBy) => {
+  if (!newSortBy) sortBy.value = oldSortBy
+})
+watch(() => sortOrder.value, (newSortOrder, oldSortOrder) => {
+  if (!newSortOrder) sortOrder.value = oldSortOrder
+})
 
 const loadTableData = async () => {
   isLoading.value = true
@@ -116,6 +126,46 @@ const getRecordTotalScore = (record: any): number => {
  * 🏗️ GROUP & SORT ASSESSMENTS BY TEAM
  * Groups rows by team and calculates the team's overall average total score.
  */
+// const sortedGroupedAssessments = computed(() => {
+//   if (!assessments.value.length) return []
+
+//   // 1. Group records by teamId
+//   const groups: Record<string, any[]> = {}
+//   assessments.value.forEach(record => {
+//     if (!groups[record.teamId]) {
+//       groups[record.teamId] = []
+//     }
+//     groups[record.teamId]!.push({
+//       ...record,
+//       totalScore: getRecordTotalScore(record)
+//     })
+//   })
+
+//   // 2. Build sorted array with calculated structural metadata
+//   const result: any[] = []
+
+//   // Sort based on your configured teams array sequence
+//   props.teams.forEach(team => {
+//     const teamRecords = groups[team.id] || []
+//     if (teamRecords.length === 0) return
+
+//     // Calculate the team average total score
+//     const sum = teamRecords.reduce((acc, rec) => acc + rec.totalScore, 0)
+//     const averageScore = Math.round((sum / teamRecords.length) * 100) / 100
+
+//     teamRecords.forEach((record, index) => {
+//       result.push({
+//         ...record,
+//         teamName: team.name,
+//         isFirstOfGroup: index === 0,
+//         groupSize: teamRecords.length,
+//         averageTotalScore: averageScore
+//       })
+//     })
+//   })
+
+//   return result
+// })
 const sortedGroupedAssessments = computed(() => {
   if (!assessments.value.length) return []
 
@@ -131,25 +181,46 @@ const sortedGroupedAssessments = computed(() => {
     })
   })
 
-  // 2. Build sorted array with calculated structural metadata
-  const result: any[] = []
-
-  // Sort based on your configured teams array sequence
-  props.teams.forEach(team => {
+  // 2. Build temporary intermediate team objects to sort them as whole bundles
+  const teamBundles = props.teams.map(team => {
     const teamRecords = groups[team.id] || []
-    if (teamRecords.length === 0) return
 
     // Calculate the team average total score
     const sum = teamRecords.reduce((acc, rec) => acc + rec.totalScore, 0)
-    const averageScore = Math.round((sum / teamRecords.length) * 100) / 100
+    const averageScore = teamRecords.length > 0 ? Math.round((sum / teamRecords.length) * 100) / 100 : 0
 
-    teamRecords.forEach((record, index) => {
+    return {
+      teamId: team.id,
+      teamName: team.name,
+      records: teamRecords,
+      averageTotalScore: averageScore
+    }
+  }).filter(bundle => bundle.records.length > 0) // Hide teams without assessments
+
+  // 3. Apply sorting logic on the bundles based on state parameters
+  teamBundles.sort((a, b) => {
+    let comparison = 0
+
+    if (sortBy.value === 'team') {
+      comparison = a.teamName.localeCompare(b.teamName)
+    } else if (sortBy.value === 'average') {
+      comparison = a.averageTotalScore - b.averageTotalScore
+    }
+
+    return sortOrder.value === 'asc' ? comparison : -comparison
+  })
+
+  // 4. Flatten the sorted bundles back into individual row configurations with structural metadata
+  const result: any[] = []
+
+  teamBundles.forEach(bundle => {
+    bundle.records.forEach((record, index) => {
       result.push({
         ...record,
-        teamName: team.name,
+        teamName: bundle.teamName,
         isFirstOfGroup: index === 0,
-        groupSize: teamRecords.length,
-        averageTotalScore: averageScore
+        groupSize: bundle.records.length,
+        averageTotalScore: bundle.averageTotalScore
       })
     })
   })
@@ -207,8 +278,26 @@ const getComponentComment = (record: any, componentIndicesPath: number[]): strin
 
 <template>
 <div class="flex flex-col" v-if="!isLoading && rubric">
-  <div class="text-xl font-black">
-    {{ rubric.title }}
+  <div class="flex flex-row items-baseline gap-3">
+    <div class="text-xl font-black flex-1">
+      {{ rubric.title }}
+    </div>
+    <ToggleGroup variant="outline" v-model="sortBy" type="single">
+      <ToggleGroupItem value="team">
+        <PhTextbox />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="average">
+        <PhExam />
+      </ToggleGroupItem>
+    </ToggleGroup>
+    <ToggleGroup variant="outline" v-model="sortOrder" type="single">
+      <ToggleGroupItem value="asc">
+        <PhSortAscending />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="desc">
+        <PhSortDescending />
+      </ToggleGroupItem>
+    </ToggleGroup>
   </div>
 
   <Table>
