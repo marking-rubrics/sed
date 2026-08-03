@@ -36,8 +36,10 @@ async function fetchUserWithRoles(firebaseUser: any): Promise<User> {
   let assignedRoles: string[] = ['']
   let assignedRubricIds: string[] = []
   let assignedTeamIds: string[] = []
+  let displayName: string = 'User'
   if (userDocSnap.exists()) {
     const data = userDocSnap.data()
+    displayName = data.displayName ?? 'User'
     if (Array.isArray(data.roles)) {
       assignedRoles = data.roles
     }
@@ -50,6 +52,7 @@ async function fetchUserWithRoles(firebaseUser: any): Promise<User> {
   }
 
   const result: User = formatUserFromServer(firebaseUser)
+  result.displayName = displayName
   result.roles = assignedRoles
   result.rubricIds = assignedRubricIds
   result.teamIds = assignedTeamIds
@@ -178,11 +181,11 @@ onMounted(() => {
                     </a>
                   </FieldDescription> -->
                 </Field>
-                <!-- <Field>
+                 <Field>
                   <FieldDescription class="text-center text-destructive" v-if="errorMessage">
                     {{ errorMessage }}
                   </FieldDescription>
-                </Field> -->
+                </Field>
               </FieldGroup>
             </form>
           </CardContent>
