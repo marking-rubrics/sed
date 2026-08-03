@@ -165,7 +165,7 @@ const getTeamName = (teamId: string): string => {
 const getExaminerName = (assessorId: string): string => {
   if (!assessorId) return '-'
   const examiner = props.examiners?.find(e => e.id === assessorId)
-  return examiner ? examiner.name : assessorId
+  return examiner ? examiner.displayName : assessorId
 }
 
 const getComponentScore = (record: any, componentIndicesPath: number[]): number | string => {
@@ -225,22 +225,23 @@ const getComponentComment = (record: any, componentIndicesPath: number[]): strin
           :key="cell.id"
           :colspan="cell.colspan"
           :rowspan="cell.rowspan"
+          class="text-center"
         >
           {{ cell.name }}
         </TableHead>
 
         <!-- ✒️ EXAMINER COLUMN HEADER -->
-        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth">
+        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth" class="text-center">
           Assessor
         </TableHead>
 
         <!-- Top Right Column Total Score Aggregator Anchor -->
-        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth">
+        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth" class="text-center">
           Assessor Score
         </TableHead>
 
         <!-- AGGREGATED AVERAGE COLUMN HEADER -->
-        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth">
+        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth" class="text-center">
           Average Score
         </TableHead>
       </TableRow>
@@ -280,21 +281,28 @@ const getComponentComment = (record: any, componentIndicesPath: number[]): strin
         </TableCell>
 
         <!-- ✒️ Examiner Identity Column -->
-        <TableCell>
+        <TableCell class="text-center">
           {{ getExaminerName(record.assessorId) }}
         </TableCell>
 
         <!-- 🎖️ Raw Assessor Total Score -->
-        <TableCell>
-          {{ record.totalScore }}<span class="text-[10px] text-slate-400 font-normal">/100</span>
+        <TableCell class="text-center">
+          <div class="flex items-baseline justify-center">
+            <span class="flex-1">{{ record.totalScore }}</span>
+            <span class="text-[10px] text-slate-400 font-normal">/100</span>
+          </div>
         </TableCell>
 
         <!-- 🧮 Spanned Aggregated Team Average Cell (Only renders once per team block) -->
         <TableCell
           v-if="record.isFirstOfGroup"
           :rowspan="record.groupSize"
+          class="text-center"
         >
-          {{ record.averageTotalScore }}<span class="text-[10px] text-teal-600/70 font-normal">/100</span>
+          <div class="flex items-baseline justify-center">
+            <span class="flex-1">{{ record.averageTotalScore }}</span>
+            <span class="text-[10px] text-teal-600/70 font-normal">/100</span>
+          </div>
         </TableCell>
       </TableRow>
 
