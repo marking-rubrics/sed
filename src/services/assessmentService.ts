@@ -43,7 +43,8 @@ export async function saveAssessment(
 ): Promise<void> {
   const collectionRef = collection(db, 'assessedRubrics')
   // Use existing ID to overwrite or generate a fresh one for a new evaluation
-  const docRef = assessment.id ? doc(collectionRef, assessment.id) : doc(collectionRef)
+  const uniqueDocId = assessment.id || `${assessment.rubricId}_${assessment.teamId}_${assessment.assessorId}`
+  const docRef = doc(collectionRef, uniqueDocId)
 
   const payload: AssessedRubric = {
     teamId: assessment.teamId,
@@ -52,10 +53,6 @@ export async function saveAssessment(
     assessedAt: serverTimestamp() as Timestamp,
     components: assessment.components
   }
-
-  console.log(docRef)
-
-  console.log(payload)
 
   await setDoc(docRef, payload)
 }
