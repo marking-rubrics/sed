@@ -72,7 +72,7 @@ function onLoginSuccess(authResult: User): void {
   if (redirectTo) {
     window.location.replace(decodeURIComponent(redirectTo))
   } else {
-    window.location.replace(`${import.meta.env.BASE_URL}/`)
+    window.location.replace(import.meta.env.BASE_URL)
   }
 }
 

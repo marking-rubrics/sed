@@ -52,7 +52,7 @@ export const useUserStore = defineStore('users', () => {
         localStorage.removeItem('auth_user')
 
         // 3. Force browser-level redirect to completely dump the app's RAM state
-        window.location.replace('/login.html')
+        window.location.replace(import.meta.env.BASE_URL + 'login.html')
       }
     }
 
