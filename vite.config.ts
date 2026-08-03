@@ -15,6 +15,7 @@ export default defineConfig({
     vueDevTools(),
     tailwindcss(),
   ],
+  base: process.env.NODE_ENV === 'production' ? '/sed/' : '/',
   resolve: {
     tsconfigPaths: true,
     alias: {
