@@ -20,7 +20,7 @@ const { activeRubric } = storeToRefs(rubricStore)
       <TableHead></TableHead>
       <TableHead></TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Descriptor</TableHead>
-      <TableHead v-for="level in activeRubric.levels" :key="level.descriptor"
+      <TableHead v-for="(level, levelindex) in activeRubric.levels" :key="levelindex"
         class="text-center px-4"
       >
         <Input
@@ -34,7 +34,7 @@ const { activeRubric } = storeToRefs(rubricStore)
       <TableHead></TableHead>
       <TableHead></TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Range</TableHead>
-      <TableHead v-for="level in activeRubric.levels" :key="level.descriptor"
+      <TableHead v-for="(level, levelindex) in activeRubric.levels" :key="levelindex"
         class="text-center px-4"
       >
         <Input
@@ -48,7 +48,7 @@ const { activeRubric } = storeToRefs(rubricStore)
       <TableHead></TableHead>
       <TableHead class="px-4">Criteria</TableHead>
       <TableHead class="w-auto whitespace-nowrap px-4 text-center">Weightage</TableHead>
-      <TableHead v-for="(level, levelIndex) in activeRubric.levels" :key="level.descriptor" class="px-4">
+      <TableHead v-for="(level, levelIndex) in activeRubric.levels" :key="levelIndex" class="px-4">
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <Button variant="secondary" class="w-full text-sm text-center">
