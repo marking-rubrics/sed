@@ -72,11 +72,12 @@ function onLoginSuccess(authResult: User): void {
   const urlParams = new URLSearchParams(window.location.search)
   const redirectTo = urlParams.get('redirect')
 
-  if (redirectTo) {
-    window.location.replace(import.meta.env.BASE_URL + decodeURIComponent(redirectTo))
-  } else {
-    window.location.replace(import.meta.env.BASE_URL)
-  }
+  // if (redirectTo) {
+  //   window.location.replace(import.meta.env.BASE_URL + decodeURIComponent(redirectTo))
+  // } else {
+  //   window.location.replace(import.meta.env.BASE_URL)
+  // }
+  window.location.replace(import.meta.env.BASE_URL)
 }
 
 async function handleLogin(): Promise<void> {
