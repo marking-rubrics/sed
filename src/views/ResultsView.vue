@@ -6,13 +6,35 @@ import { getRubricsLookup } from '@/services/rubricService'
 import { getAllTeams } from '@/services/teamService'
 import type { RubricLookup, Team } from '@/types'
 import { ResultMatrix } from '@/components/result'
+import type { User } from '@/types'
+import { getAssessors } from '@/services/userService'
 
 const rubricsLookup = ref<RubricLookup[]>([])
 const teams = ref<Team[]>([])
 const selectedRubricIds = ref<string[]>([])
+const examinersList = ref<User[]>([])
+const isLoading = ref<boolean>(true)
 onMounted(async () => {
   rubricsLookup.value = await getRubricsLookup()
   teams.value = await getAllTeams()
+})
+onMounted(async () => {
+  try {
+    // Load your lookup dependencies in parallel to minimize layout blocking
+    const [fetchedTeams, fetchedAssessors, fetchedRubricsLookup] = await Promise.all([
+      getAllTeams(),
+      getAssessors(),
+      getRubricsLookup()
+    ])
+
+    teams.value = fetchedTeams
+    examinersList.value = fetchedAssessors
+    rubricsLookup.value = fetchedRubricsLookup
+  } catch (err) {
+    console.error('Initialization error:', err)
+  } finally {
+    isLoading.value = false
+  }
 })
 </script>
 
@@ -30,7 +52,7 @@ onMounted(async () => {
   </div>
 
   <template v-for="rubricId in selectedRubricIds">
-    <ResultMatrix :rubricId="rubricId" :teams="teams" />
+    <ResultMatrix :rubricId="rubricId" :teams="teams" :examiners="examinersList" />
   </template>
 
 </div>

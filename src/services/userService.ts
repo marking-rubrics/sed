@@ -281,3 +281,38 @@ export async function administrativeDeleteUser(userId: string): Promise<void> {
     throw error
   }
 }
+
+/**
+ * 🔍 FETCH ASSESSORS: Queries Firestore for all user profiles
+ * configured with the 'assessor' or 'lecturer' role.
+ */
+export async function getAssessors(): Promise<User[]> {
+  try {
+    const usersCollection = collection(db, 'users')
+
+    // Create a query to filter documents where role equals 'assessor'
+    const assessorsQuery = query(
+      usersCollection,
+      where('roles', 'array-contains', 'assessor'),
+      orderBy('displayName', 'asc') // Keeps your UI dropdowns/lists neatly ordered
+    )
+
+    const querySnapshot = await getDocs(assessorsQuery)
+    const assessors: User[] = []
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      assessors.push({
+        id: doc.id,
+        displayName: data.displayName || 'Unknown Assessor',
+        email: data.email || '',
+        roles: data.roles || ['assessor']
+      })
+    })
+
+    return assessors
+  } catch (error) {
+    console.error('Failed to retrieve assessors from database:', error)
+    throw error
+  }
+}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import type { Team, Rubric } from '@/types'
+import type { Team, Rubric, User } from '@/types'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { getCompleteRubric } from '@/services/rubricService'
 import { getAllAssessmentsForRubric } from '@/services/assessmentService'
@@ -12,7 +12,7 @@ import { PhChatTeardropDots } from '@phosphor-icons/vue'
 const props = defineProps<{
   rubricId: string
   teams: Team[]
-  examiners?: Array<{ id: string; name: string }>
+  examiners?: User[]
 }>()
 
 const rubric = ref<Rubric | null>(null)
