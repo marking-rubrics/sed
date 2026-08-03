@@ -14,11 +14,11 @@ import { getAllTeams } from '@/services/teamService'
 import { getAllUsersWithProfileAssignments, updateExistingUserAndAssignments, administrativeDeleteUser } from '@/services/userService'
 import { adminRegisterAndProvisionUser } from '@/services/adminService'
 import { getRubricsLookup } from '@/services/rubricService';
-import { getAuth } from 'firebase/auth'
+import { useUserStore } from '@/stores/users';
+const userStore = useUserStore()
 
-const auth = getAuth()
 const manageableUsers = computed(() => {
-  const currentAdminUid = auth.currentUser?.uid
+  const currentAdminUid = userStore.currentUser?.id
 
   return users.value.filter((user) => {
     // 🚀 CRITICAL CHECK: Filter out any soft-deleted or disabled profile accounts
@@ -30,6 +30,7 @@ const manageableUsers = computed(() => {
     return true
   })
 })
+const currentUser = computed(() => users.value.find(user => user.id === userStore.currentUser?.id))
 
 const users = ref<User[]>([])
 const teams = ref<Team[]>([])
@@ -107,7 +108,9 @@ const deleteUser = async (user: User) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <!-- <UserInfo :user="currentUser" class="w-full max-w-md" @click="sendToEditor(currentUser)"/> -->
+          <UserInfo v-if="currentUser" :user="currentUser!" class="w-full max-w-md" @click="sendToEditor(currentUser!)"
+            :rubrics="rubrics" :teams="teams"
+          />
           <UserInfo v-for="user in manageableUsers" :key="user.id" :user="user" class="w-full max-w-md" @click="sendToEditor(user)"
             :rubrics="rubrics" :teams="teams"
           />

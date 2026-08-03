@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RubricLookup, User } from "@/types";
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { Button } from "@/components/ui/button";
 import { PhX, PhCheck, PhTrash, PhArrowCounterClockwise } from "@phosphor-icons/vue";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
 import TagsInputWithListbox from "./TagsInputWithListbox.vue";
 import type { Rubric, Team } from "@/types";
+import { useUserStore } from "@/stores/users";
+const userStore = useUserStore()
 
 const props = defineProps<{
   user: User,
@@ -19,6 +21,7 @@ const displayName = ref('')
 const roles = ref<string[]>([])
 const rubricIds = ref<string[]>([])
 const teamIds = ref<string[]>([])
+const isCurrentUser = computed(() => props.user.id === userStore.currentUser?.id)
 
 watch(
   () => props.user,
@@ -106,7 +109,7 @@ const closeEditor = () => {
   <CardFooter class="flex flex-row gap-1 justify-end">
     <Button variant="secondary" @click="resetEdit"><PhArrowCounterClockwise/>Reset</Button>
     <Button variant="default" @click="confirmEdit"><PhCheck/>Confirm</Button>
-    <Button variant="destructive" @click="deleteUser" class="ms-auto"><PhTrash/>Delete</Button>
+    <Button v-if="!isCurrentUser" variant="destructive" @click="deleteUser" class="ms-auto"><PhTrash/>Delete</Button>
   </CardFooter>
 </Card>
 </template>
