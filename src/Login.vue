@@ -73,7 +73,7 @@ function onLoginSuccess(authResult: User): void {
   const redirectTo = urlParams.get('redirect')
 
   if (redirectTo) {
-    window.location.replace(decodeURIComponent(redirectTo))
+    window.location.replace(import.meta.env.BASE_URL + decodeURIComponent(redirectTo))
   } else {
     window.location.replace(import.meta.env.BASE_URL)
   }
