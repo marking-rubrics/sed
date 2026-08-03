@@ -3,12 +3,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import type { Team, Rubric, User } from '@/types'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { getCompleteRubric } from '@/services/rubricService'
-import { getAllAssessmentsForRubric } from '@/services/assessmentService'
+import { getAllAssessmentsForRubric, deleteAssessmentEntry } from '@/services/assessmentService'
 import { buildHeaderMatrix, getRubricMaxDepth } from '@/utils/rubricHeaderHelpers'
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@/components/ui/table'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { PhChatTeardropDots, PhExam, PhSortAscending, PhSortDescending, PhTextbox } from '@phosphor-icons/vue'
+import { PhChatTeardropDots, PhExam, PhSortAscending, PhSortDescending, PhTextbox, PhTrashSimple } from '@phosphor-icons/vue'
+import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
   rubricId: string
@@ -228,10 +229,10 @@ const sortedGroupedAssessments = computed(() => {
   return result
 })
 
-const getTeamName = (teamId: string): string => {
-  const team = props.teams.find(t => t.id === teamId)
-  return team ? team.name : 'Unknown Team'
-}
+// const getTeamName = (teamId: string): string => {
+//   const team = props.teams.find(t => t.id === teamId)
+//   return team ? team.name : 'Unknown Team'
+// }
 
 const getExaminerName = (assessorId: string): string => {
   if (!assessorId) return '-'
@@ -273,6 +274,15 @@ const getComponentComment = (record: any, componentIndicesPath: number[]): strin
     }
   }
   return ''
+}
+
+const deleteAssessment = async (assessmentId: string) => {
+  try {
+    deleteAssessmentEntry(assessmentId)
+    loadTableData()
+  } catch (error) {
+    console.error(error)
+  }
 }
 </script>
 
@@ -317,6 +327,10 @@ const getComponentComment = (record: any, componentIndicesPath: number[]): strin
           class="text-center"
         >
           {{ cell.name }}
+        </TableHead>
+
+        <!-- DELETION COLUMN HEADER -->
+        <TableHead v-if="rowIndex === 0" :rowspan="maxHeaderDepth" class="text-center">
         </TableHead>
 
         <!-- ✒️ EXAMINER COLUMN HEADER -->
@@ -367,6 +381,13 @@ const getComponentComment = (record: any, componentIndicesPath: number[]): strin
                 </Tooltip>
               </TooltipProvider>
             </div>
+        </TableCell>
+
+        <!-- Deletion Column -->
+        <TableCell class="text-center">
+          <Button @click="deleteAssessment(record.id)" variant="destructive">
+            <PhTrashSimple />
+          </Button>
         </TableCell>
 
         <!-- ✒️ Examiner Identity Column -->
