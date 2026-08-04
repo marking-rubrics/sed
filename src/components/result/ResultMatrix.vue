@@ -8,7 +8,7 @@ import { buildHeaderMatrix, getRubricMaxDepth } from '@/utils/rubricHeaderHelper
 import { Table, TableHeader, TableRow, TableHead, TableCell, TableBody } from '@/components/ui/table'
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { PhChatTeardropDots, PhExam, PhSortAscending, PhSortDescending, PhTextbox, PhTrashSimple } from '@phosphor-icons/vue'
+import { PhChatTeardropDots, PhExam, PhSortAscending, PhSortDescending, PhTextbox, PhTrashSimple, PhFileXls } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
@@ -284,6 +284,116 @@ const deleteAssessment = async (assessmentId: string) => {
     console.error(error)
   }
 }
+
+import * as XLSX from 'xlsx'
+
+/**
+ * 📊 EXPORT MATRIX TO EXCEL (.xlsx)
+ * Dynamic multi-column layout for scores and criterion-level comments.
+ */
+const exportToExcel = () => {
+  if (!sortedGroupedAssessments.value.length || !rubric.value) {
+    alert('No data available to export.')
+    return
+  }
+
+  // 1. Build Dynamic Criteria Header Columns
+  // Pair each leaf criterion into [Score Header, Comment Header]
+  const criteriaHeaders: string[] = []
+
+  leafComponents.value.forEach(component => {
+    const name = component.name || 'Criterion'
+    criteriaHeaders.push(`${name} (Score)`)
+    criteriaHeaders.push(`${name} (Comments)`)
+  })
+
+  // Full Header Row Configuration
+  const baseHeaders = ['Team Name', 'Examiner Name']
+  const summaryHeaders = ['Assessor Total Score', 'Team Average Score']
+  const headerRow = [...baseHeaders, ...criteriaHeaders, ...summaryHeaders]
+
+  // 2. Format Data Rows
+  const rows: any[][] = []
+
+  sortedGroupedAssessments.value.forEach((record) => {
+    const teamName = record.teamName || ''
+    const examinerName = getExaminerName(record.assessorId)
+
+    // Extract both score and comment for every leaf criterion component
+    const criteriaValues: (string | number)[] = []
+
+    leafComponents.value.forEach((cell) => {
+      // Find matching component score and comment entry inside the record payload
+      const path = cell.pathCoordinates || []
+
+      const score = getComponentScore(record, path)
+      const comment = getComponentCommentXlsx(record, path)
+
+      criteriaValues.push(score !== null && score !== undefined ? score : '-')
+      criteriaValues.push(comment ? comment : '-')
+    })
+
+    const assessorTotal = record.totalScore !== undefined ? record.totalScore : '-'
+    const teamAverage = record.averageTotalScore !== undefined ? record.averageTotalScore : '-'
+
+    // Assemble the complete row
+    rows.push([
+      teamName,
+      examinerName,
+      ...criteriaValues,
+      assessorTotal,
+      teamAverage
+    ])
+  })
+
+  // 3. Construct Worksheet
+  const worksheetData = [
+    [`Evaluation Results: ${rubric.value.title}`], // Title Banner
+    [], // Spacer
+    headerRow,
+    ...rows
+  ]
+
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+
+  // 4. Calculate Column Widths for clean alignment
+  const colWidths = headerRow.map((header, colIdx) => {
+    let maxLen = header.length
+    worksheetData.slice(2).forEach((row) => {
+      const cellVal = row[colIdx] ? String(row[colIdx]) : ''
+      if (cellVal.length > maxLen) {
+        maxLen = cellVal.length
+      }
+    })
+    // Give comment columns comfortable breathing room (up to 50 chars wide)
+    return { wch: Math.min(Math.max(maxLen + 3, 14), 50) }
+  })
+  worksheet['!cols'] = colWidths
+
+  // 5. Generate and Download File
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Detailed Results')
+
+  const sanitizedTitle = rubric.value.title.replace(/[^a-zA-Z0-9_-]/g, '_')
+  XLSX.writeFile(workbook, `${sanitizedTitle}_Results.xlsx`)
+}
+
+/**
+ * 🔍 HELPER: Extract criterion comment matching leaf path
+ */
+const getComponentCommentXlsx = (record: any, pathCoordinates: number[]): string => {
+  if (!record || !Array.isArray(record.components)) return ''
+
+  // Search by matching component coordinate string path or criterion key
+  const pathKey = pathCoordinates.join('.')
+
+  const matchedComponent = record.components.find((c: any) => {
+    const targetPath = Array.isArray(c.pathCoordinates) ? c.pathCoordinates.join('.') : c.path
+    return targetPath === pathKey || c.id === pathKey
+  })
+
+  return matchedComponent?.comment || matchedComponent?.feedback || ''
+}
 </script>
 
 <template>
@@ -291,6 +401,9 @@ const deleteAssessment = async (assessmentId: string) => {
   <div class="flex flex-row items-baseline gap-3">
     <div class="text-xl font-black flex-1">
       {{ rubric.title }}
+    </div>
+    <div>
+      <Button @click="exportToExcel" variant="outline"><PhFileXls /></Button>
     </div>
     <ToggleGroup variant="outline" v-model="sortBy" type="single">
       <ToggleGroupItem value="team">
