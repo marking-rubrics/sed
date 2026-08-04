@@ -20,6 +20,7 @@ onMounted(async () => {
 import { useAssessmentStore } from '@/stores/assessments'
 import { Alert } from '@/components/ui/alert'
 import { PhCheckCircle, PhFloppyDisk } from '@phosphor-icons/vue'
+import { Button } from '@/components/ui/button'
 const assessmentStore = useAssessmentStore()
 
 const prepareAssessment = async () => {
@@ -38,6 +39,10 @@ const prepareAssessment = async () => {
       console.error('Failed to prepare assessment canvas:', error)
     }
   }
+}
+
+const saveAssessment = async () => {
+  await assessmentStore.executeSave(userStore.currentUser!.id, selectedTeamId.value!)
 }
 
 const allowedRubrics = computed(() => {
@@ -112,11 +117,20 @@ watch(
     {{ assessmentStore.gradingComponents }}
   </div> -->
 
-  <Alert v-if="assessmentStore.activeRubric" :variant="assessmentStore.isSaving ? 'destructive' : assessmentStore.isDirty ? 'destructive' : 'default'">
-    <PhCheckCircle v-if="!assessmentStore.isDirty" />
-    <PhFloppyDisk v-else />
-    <span>{{ assessmentStore.isSaving ? 'Saving...' : assessmentStore.isDirty ? 'Unsaved changes' : 'Changes saved' }}</span>
-  </Alert>
+  <div class="flex flex-row gap-1 items-stretch">
+    <Alert v-if="assessmentStore.activeRubric" :variant="assessmentStore.isSaving ? 'destructive' : assessmentStore.isDirty ? 'destructive' : 'default'">
+      <div class="flex flex-row gap-1 items-center">
+        <PhCheckCircle v-if="!assessmentStore.isDirty" />
+        <PhFloppyDisk v-else />
+        <span class="flex-1">{{ assessmentStore.isSaving ? 'Saving...' : assessmentStore.isDirty ? 'Unsaved changes' : 'Changes saved' }}</span>
+        <Button @click="saveAssessment"
+          class="bg-destructive"
+          v-if="assessmentStore.activeRubric"
+          :disabled="!assessmentStore.isDirty"
+        ><PhFloppyDisk /></Button>
+      </div>
+    </Alert>
+  </div>
 
   <div class="flex flex-row items-start h-full w-full" v-if="selectedRubricId && selectedTeamId && assessmentStore.activeRubric">
     <div class="flex-1 overflow-x-auto hidden md:block">

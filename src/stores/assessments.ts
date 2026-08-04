@@ -275,6 +275,7 @@ export const useAssessmentStore = defineStore('assessmentWorkspace', () => {
     fetchAndSetActiveRubric,
     prepareEvaluationCanvas,
     initializeAutosaveWatcher,
+    executeSave,
     // submitEvaluation: executeSave, // Alias for manual form submission overrides
     resetWorkspace,
 
