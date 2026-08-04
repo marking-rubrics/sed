@@ -46,15 +46,19 @@ const refreshUsers = async () => {
 
 const newUserName = ref("")
 const newEmail = computed(() => newUserName.value + "@sed-marking.com")
+const password = ref("")
 const createNewUser = async () => {
   if (newUserName.value === '') return
+  if (password.value === '') return
   await adminRegisterAndProvisionUser({
     displayName: newUserName.value,
     email: newEmail.value,
-    password: 'sunway',
+    password: password.value,
     roles: ['assessor']
   })
   users.value = await getAllUsersWithProfileAssignments()
+  newUserName.value = ""
+  password.value = ""
 }
 
 const showEditor = ref(false)
@@ -92,6 +96,7 @@ const deleteUser = async (user: User) => {
 <div class="flex flex-col gap-2 mt-2">
   <div class="flex flex-row items-center gap-1">
     <Input placeholder="Username" v-model="newUserName"/>
+    <Input placeholder="Password" v-model="password"/>
     <Button variant="secondary" @click="createNewUser"><PhPlus /> New User</Button>
   </div>
 
