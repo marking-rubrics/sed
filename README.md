@@ -1,42 +1,35 @@
-# sed-poster
+## 🚀 Quick Start: Forking & Deploying Your Own Instance
 
-This template should help get you started developing with Vue 3 in Vite.
+### 1. Fork this Repository
+Click the **Fork** button at the top right of this page to create a copy under your GitHub account.
 
-## Recommended IDE Setup
+---
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+### 2. Set Up Firebase
+1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
+2. Enable **Authentication** (Email/Password or Google Sign-In) and **Cloud Firestore**.
+3. In **Authentication -> Settings -> Authorized Domains**, add:
+   `<your-github-username>.github.io`
+4. Register a Web App in Firebase Settings to get your configuration object.
 
-## Recommended Browser Setup
+---
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+### 3. Add GitHub Secrets for Automated Deployment
+In your forked GitHub repository:
+1. Go to **Settings -> Secrets and variables -> Actions**.
+2. Click **New repository secret** and add the following keys from your Firebase config:
+   * `VITE_FIREBASE_API_KEY`
+   * `VITE_FIREBASE_AUTH_DOMAIN`
+   * `VITE_FIREBASE_PROJECT_ID`
+   * `VITE_FIREBASE_STORAGE_BUCKET`
+   * `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   * `VITE_FIREBASE_MEASUREMENT_ID`
+   * `VITE_FIREBASE_APP_ID`
 
-## Type Support for `.vue` Imports in TS
+---
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
+### 4. Enable GitHub Pages
+1. Go to your repository's **Settings -> Actions -> General -> Workflow permissions** and select **Read and write permissions**.
+2. Go to **Settings -> Pages**.
+3. Set **Source** to `Deploy from a branch`, choose `gh-pages` branch and `/ (root)`, then click **Save**.
+4. Push any commit to `main` (or run the workflow manually under the **Actions** tab) to deploy!
