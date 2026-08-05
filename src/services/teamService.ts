@@ -11,7 +11,7 @@ import {
   where
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { Team } from '@/types'
+import type { Team, TeamImportData } from '@/types'
 
 /**
  * 🚀 CREATE: Provision a brand new team document inside Firestore.
@@ -126,4 +126,37 @@ export async function deleteTeamComplete(teamId: string): Promise<void> {
     console.error(`Failed to execute complete deletion process for team [${teamId}]:`, error)
     throw error
   }
+}
+
+export async function saveTeamsToFirestore(teamsToImport: TeamImportData[]): Promise<number> {
+  if (!teamsToImport || teamsToImport.length === 0) return 0
+
+  const BATCH_SIZE = 500
+  let totalSaved = 0
+  const teamsCollectionRef = collection(db, 'teams')
+
+  for (let i = 0; i < teamsToImport.length; i += BATCH_SIZE) {
+    const chunk = teamsToImport.slice(i, i + BATCH_SIZE)
+    const batch = writeBatch(db)
+
+    chunk.forEach((item) => {
+      // 1. Generate a fresh document reference with a native Firestore ID
+      const newTeamDocRef = doc(teamsCollectionRef)
+
+      // 2. Construct payload matching your Team interface with the auto-generated ID
+      const teamData: Team = {
+        id: newTeamDocRef.id,
+        name: item.teamName.trim(),
+        members: item.members
+      }
+
+      // 3. Queue the set operation
+      batch.set(newTeamDocRef, teamData)
+    })
+
+    await batch.commit()
+    totalSaved += chunk.length
+  }
+
+  return totalSaved
 }

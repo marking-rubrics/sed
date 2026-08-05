@@ -46,6 +46,11 @@ export interface Team {
   members: string[];
 }
 
+export interface TeamImportData {
+  teamName: string
+  members: string[]
+}
+
 /**
  * Core Rubric Metatdata Document
  * Firestore Location: /rubrics/{rubricId}
